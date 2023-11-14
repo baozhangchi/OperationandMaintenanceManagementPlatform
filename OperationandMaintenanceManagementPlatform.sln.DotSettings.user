@@ -1,0 +1,15 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=UUID/@EntryIndexedValue">UUID</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=82cc1c0e_002Da450_002D4891_002Da3bd_002Dd1125b9662cf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Test1 #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;NUnit3x::CB1D664F-5DC3-4CC2-9583-D9FF979FF370::net6.0::OMMP.Common.Tester.HardwareHelperTests.GetIpAddressTest&lt;/TestId&gt;
+    &lt;TestId&gt;NUnit3x::CB1D664F-5DC3-4CC2-9583-D9FF979FF370::net6.0::OMMP.Common.Tester.HardwareHelperTests.GetPartitionLogsTest&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ef2fc540_002Dfb0d_002D4ac0_002Da19a_002Db042732ae157/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Test1" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;NUnit3x::CB1D664F-5DC3-4CC2-9583-D9FF979FF370::net6.0::OMMP.Common.Tester.HardwareHelperTests.GetIpAddressTest&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
+	
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=OMMP/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
