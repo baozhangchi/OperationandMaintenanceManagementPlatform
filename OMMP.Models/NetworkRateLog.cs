@@ -4,7 +4,7 @@ namespace OMMP.Models;
 
 /// <summary>
 /// 网卡速度记录
-/// </summary>
+/// </summary>l
 public class NetworkRateLog : LogTableBase
 {
     [SugarColumn(CreateTableFieldSort = 2)]

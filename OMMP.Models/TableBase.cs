@@ -11,5 +11,5 @@ public abstract class TableBase
 public abstract class LogTableBase : TableBase
 {
     [SugarColumn(CreateTableFieldSort = 1)]
-    public DateTime Time { get; set; } = DateTime.Now;
+    public DateTime Time { get; set; }
 }

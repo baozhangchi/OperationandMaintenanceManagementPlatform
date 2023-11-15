@@ -20,7 +20,7 @@ namespace OMMP.MonitoringService.Controllers
             _cpuLogRepository = cpuLogRepository;
         }
 
-        [HttpGet("count")]
+        [HttpGet("{count}")]
         public async Task<IEnumerable<CpuLog>> GetCpuUsed(int count)
         {
             return await _cpuLogRepository.GetListAsync(count);

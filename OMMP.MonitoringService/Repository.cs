@@ -43,7 +43,7 @@ public static class RepositoryBase
             DbType = DbType.Sqlite,
             ConnectionString = $"DataSource={Path.Combine(GlobalCache.DataFolder, $"latest.db")}",
             IsAutoCloseConnection = true,
-            ConfigureExternalServices = RepositoryBase.ExternalServices
+            ConfigureExternalServices = ExternalServices
         });
         client.DbMaintenance.CreateDatabase();
         client.CodeFirst.InitTables(typeof(TableBase).Assembly.GetTypes()
@@ -51,13 +51,14 @@ public static class RepositoryBase
         return client;
     }
 }
+
 public abstract class RepositoryBase<T> : SimpleClient<T>, IDisposable where T : TableBase, new()
 {
     public void Dispose()
     {
-        
     }
 }
+
 public class Repository<T> : RepositoryBase<T> where T : TableBase, new()
 {
     public Repository(ISqlSugarClient client)
@@ -95,6 +96,11 @@ public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
     public async Task<List<T>> GetListAsync(int num)
     {
         return await Context.Queryable<T>().OrderByDescending(x => x.Time).Take(num).ToListAsync();
+    }
+
+    public async Task<T> GetLatestAsync(Expression<Func<T, bool>> whereExpression)
+    {
+        return await Context.Queryable<T>().OrderByDescending(x => x.Time).FirstAsync(whereExpression);
     }
 
     public LogRepository(ISqlSugarClient client) : base(client)

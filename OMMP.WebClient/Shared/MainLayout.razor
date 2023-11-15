@@ -1,19 +1,50 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Linq;
+@using System.Runtime.CompilerServices
+@using Newtonsoft.Json
+@using Console = System.Console
+@inherits LayoutComponentBase
 
 <PageTitle>OMMP.WebClient</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
+<Layout ShowFooter="true" IsFullSide="true">
+    <Header>
+        <Select IsVirtualize="true" OnQueryAsync="LoadClientDataAsync" @bind-Value="SelectedClient"></Select>
+    </Header>
+    <Side>
+        <div></div>
+    </Side>
+    <Main>
+        <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Normal">
+            <NetworkMonitor ClientApiUrl="@SelectedClient?.Value"></NetworkMonitor>
+            <CpuMonitor ClientApiUrl="@SelectedClient?.Value"></CpuMonitor>
+            <MemoryMonitor ClientApiUrl="@SelectedClient?.Value"></MemoryMonitor>
+        </Row>
+        <DriveMonitor ClientApiUrl="@SelectedClient?.Value"></DriveMonitor>
+    </Main>
+    @* <Footer> *@
+    @*     <div class="text-center footer">Footer</div> *@
+    @* </Footer> *@
+</Layout>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
+@code
+{
+    public SelectedItem SelectedClient { get; set; }
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    private async Task<QueryData<SelectedItem>> LoadClientDataAsync(VirtualizeQueryOption arg)
+    {
+        await Task.CompletedTask;
+        var items = GlobalCache.Instance.MonitoringClients.Select(x => new SelectedItem(x.ClientApiUrl, x.ClientIpAddress)).ToList();
+        return new QueryData<SelectedItem>()
+        {
+            Items = items,
+            TotalCount = items.Count
+        };
+    }
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        return true;
+    }
+}

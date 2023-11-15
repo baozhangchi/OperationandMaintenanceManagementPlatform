@@ -2,8 +2,20 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OMMP.Common\OMMP.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BootstrapBlazor" Version="8.0.0" />
+      <PackageReference Include="BootstrapBlazor.Chart" Version="8.0.0" />
+      <PackageReference Include="BootstrapBlazor.FontAwesome" Version="8.0.0" />
+      <PackageReference Remove="BootstrapBlazor.Analyzers" />
+      <PackageReference Remove="BootstrapBlazor.Analyzers" />
+    </ItemGroup>
 
 </Project>

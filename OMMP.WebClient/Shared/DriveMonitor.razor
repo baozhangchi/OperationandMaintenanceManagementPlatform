@@ -1,0 +1,9 @@
+<Row @ref="Container">
+    @if (Drives != null)
+    {
+        foreach (var drive in Drives)
+        {
+            <Chart ChartType="ChartType.Pie" OnInitAsync="() => InitAsync(drive)"></Chart>
+        }
+    }
+</Row>

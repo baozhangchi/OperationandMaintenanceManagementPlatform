@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OMMP.Common;
 using OMMP.Models;
@@ -30,6 +25,24 @@ namespace OMMP.MonitoringService.Controllers
             }
 
             return data;
+        }
+
+        [HttpGet("latest")]
+        public async Task<List<DriveLog>> GetPartitionLog()
+        {
+            var data = new List<DriveLog>();
+            foreach (var disk in HardwareHelper.Disks)
+            {
+                data.Add(await _partitionLogRepository.GetLatestAsync(x => x.Name == disk));
+            }
+
+            return data;
+        }
+
+        [HttpGet("partitions")]
+        public async Task<IEnumerable<string>> GetPartitions()
+        {
+            return await Task.FromResult(HardwareHelper.Disks);
         }
     }
 }
