@@ -1,50 +1,22 @@
-﻿@using System.Linq;
-@using System.Runtime.CompilerServices
-@using Newtonsoft.Json
-@using Console = System.Console
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 <PageTitle>OMMP.WebClient</PageTitle>
 
-<Layout ShowFooter="true" IsFullSide="true">
+<Layout ShowFooter="true" IsFullSide="true" IsPage="true" ShowCollapseBar="true" IsFixedHeader="true" OnCollapsed="@OnCollapsed" SideWidth="@SideWidth">
     <Header>
-        <Select IsVirtualize="true" OnQueryAsync="LoadClientDataAsync" @bind-Value="SelectedClient"></Select>
+        <div>
+            <Select IsVirtualize="true" Items="Clients" @bind-Value="SelectedClient"></Select>
+        </div>
     </Header>
     <Side>
-        <div></div>
+        <div style="position: absolute; top: 0; left:0; right: 0; bottom: 0; overflow: auto; border-right: 1px solid rgba(0,0,0,.125); padding: 6px 0;">
+            <NavMenu></NavMenu>
+        </div>
     </Side>
     <Main>
-        <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Normal">
-            <NetworkMonitor ClientApiUrl="@SelectedClient?.Value"></NetworkMonitor>
-            <CpuMonitor ClientApiUrl="@SelectedClient?.Value"></CpuMonitor>
-            <MemoryMonitor ClientApiUrl="@SelectedClient?.Value"></MemoryMonitor>
-        </Row>
-        <DriveMonitor ClientApiUrl="@SelectedClient?.Value"></DriveMonitor>
-    </Main>
-    @* <Footer> *@
-    @*     <div class="text-center footer">Footer</div> *@
-    @* </Footer> *@
-</Layout>
-
-@code
-{
-    public SelectedItem SelectedClient { get; set; }
-
-    private async Task<QueryData<SelectedItem>> LoadClientDataAsync(VirtualizeQueryOption arg)
-    {
-        await Task.CompletedTask;
-        var items = GlobalCache.Instance.MonitoringClients.Select(x => new SelectedItem(x.ClientApiUrl, x.ClientIpAddress)).ToList();
-        return new QueryData<SelectedItem>()
+        @if (SelectedClient != null)
         {
-            Items = items,
-            TotalCount = items.Count
-        };
-    }
-
-    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        return true;
-    }
-}
+            @Body
+        }
+    </Main>
+</Layout>

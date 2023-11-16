@@ -1,0 +1,34 @@
+@page "/applications"
+@using OMMP.Models
+<Tab IsLazyLoadTabItem="true" ShowExtendButtons="true">
+    <TabItem Text="应用管理">
+        <Row>
+            <Button OnClick="@AddApplication">添加应用</Button>
+        </Row>
+
+        <Table TItem="ApplicationInfo" Items="@Applications" IsBordered TableSize="TableSize.Compact" OnQueryAsync="QueryAsync">
+            <TableColumns>
+                <TableColumn @bind-Field="@context.Name" Width="180" Text="应用名称"/>
+                <TableColumn @bind-Field="@context.AppFolder" Text="应用所在目录"/>
+                <TableColumn @bind-Field="@context.AppFileName" Text="启动文件名称"/>
+                <TableColumn @bind-Field="@context.Argument" Text="启动参数"/>
+                <TableColumn @bind-Field="@context.AutoRestart" Text="是否自动启动"/>
+            </TableColumns>
+        </Table>
+    </TabItem>
+</Tab>
+<Modal @ref="ApplicationDetailModal">
+    <ModalDialog ShowSaveButton="true" OnSaveAsync="@SaveAsync" Title="@ApplicationDetailModalTitle" IsCentered="true" IsDraggable="true" ShowCloseButton="true" ShowHeaderCloseButton="true" IsScrolling="true" ShowResize="true">
+        <BodyTemplate>
+            <ValidateForm Model="@CurrentApplication">
+                <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Inline">
+                    <BootstrapInput @bind-Value="@CurrentApplication.Name"/>
+                    <BootstrapInput DisplayText="应用所在目录" @bind-Value="@CurrentApplication.AppFolder"/>
+                    <BootstrapInput DisplayText="启动文件名称" @bind-Value="@CurrentApplication.AppFileName"/>
+                    <BootstrapInput DisplayText="启动参数" @bind-Value="@CurrentApplication.Argument"/>
+                    <Switch DisplayText="是否自动启动"  @bind-Value="@CurrentApplication.AutoRestart"/>
+                </Row>
+            </ValidateForm>
+        </BodyTemplate>
+    </ModalDialog>
+</Modal>

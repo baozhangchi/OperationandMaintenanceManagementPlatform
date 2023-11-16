@@ -87,15 +87,25 @@ public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
         return await base.InsertRangeAsync(insertObjs);
     }
 
-    public async Task<List<T>> GetListAsync(Expression<Func<T, bool>> whereExpression, int num)
+    public async Task<List<T>> GetLatestListAsync(Expression<Func<T, bool>> whereExpression, int num)
     {
-        return await Context.Queryable<T>().OrderByDescending(x => x.Time).Where(whereExpression).Take(num)
+        var items = await Context.Queryable<T>().Where(whereExpression).OrderByDescending(x => x.Time).Take(num)
             .ToListAsync();
+        items.Reverse();
+        return items;
     }
 
-    public async Task<List<T>> GetListAsync(int num)
+    public async Task<List<T>> GetLatestListAsync(Expression<Func<T, bool>> whereExpression)
     {
-        return await Context.Queryable<T>().OrderByDescending(x => x.Time).Take(num).ToListAsync();
+        var items = await Context.Queryable<T>().Where(whereExpression).OrderByDescending(x => x.Time)
+            .ToListAsync();
+        items.Reverse();
+        return items;
+    }
+
+    public async Task<List<T>> GetLatestListAsync(int num)
+    {
+        return await GetLatestListAsync(x => true, num);
     }
 
     public async Task<T> GetLatestAsync(Expression<Func<T, bool>> whereExpression)

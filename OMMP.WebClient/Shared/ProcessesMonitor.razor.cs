@@ -1,6 +1,4 @@
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Timers;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
@@ -10,7 +8,7 @@ using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public partial class MemoryMonitor : IMonitorComponent
+public partial class ProcessesMonitor : IMonitorComponent
 {
     private bool _refreshDataSignaler;
     private DateTime? _lastTime;
@@ -24,6 +22,39 @@ public partial class MemoryMonitor : IMonitorComponent
         return true;
     }
 
+    private async Task<ChartDataSource> InitAsync()
+    {
+        var dataSource = new ChartDataSource();
+        dataSource.Options.Title = "系统进程数";
+        dataSource.Options.X.Title = "时间";
+        dataSource.Options.Y.Title = "进程数";
+        dataSource.Options.ShowXScales = false;
+        dataSource.Options.ShowLegend = false;
+
+        var url = MaxMinDateTimeRangeValue != null
+            ? @"api/Processes/byTimePeriods/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
+            : _lastTime.HasValue
+                ? $"api/Processes/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
+                : $"api/Processes/1000";
+        var data = await HttpHelper.GetAsync<List<ServerResourceLog>>(url);
+        if (!data.Any()) return dataSource;
+
+        dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
+        if (AutoRefresh) _lastTime = data.Max(x => x.Time);
+        dataSource.Data.Add(new ChartDataset()
+        {
+            ShowPointStyle = false,
+            PointRadius = 1,
+            PointStyle = ChartPointStyle.Circle,
+            // PointHoverRadius = 10,
+            Tension = 0,
+            BorderWidth = 1,
+            Data = data.Select(x => (object)x.ProcessCount)
+        });
+
+        return dataSource;
+    }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -33,48 +64,7 @@ public partial class MemoryMonitor : IMonitorComponent
 
     private void OnTimerElapsed()
     {
-        if (AutoRefresh)
-        {
-            LineChart?.Update(ChartAction.AddData);
-        }
-    }
-
-    private async Task<ChartDataSource> OnInit()
-    {
-        var dataSource = new ChartDataSource();
-        dataSource.Options.Title = "内存使用率";
-        // dataSource.Options.LegendLabelsFontSize = 16;
-        dataSource.Options.X.Title = "时间";
-        dataSource.Options.Y.Title = "使用率%";
-        dataSource.Options.ShowXScales = false;
-        dataSource.Options.ShowLegend = false;
-
-        var url = MaxMinDateTimeRangeValue != null
-            ? @"api/Memory/byTimePeriods/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
-            : _lastTime.HasValue
-                ? $"api/Memory/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
-                : $"api/Memory/1000";
-        var data = await HttpHelper.GetAsync<List<MemoryLog>>(url);
-        if (!data.Any())
-        {
-            return dataSource;
-        }
-
-        dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
-        _lastTime = data.Max(x => x.Time);
-        dataSource.Data.Add(new ChartDataset()
-        {
-            ShowPointStyle = false,
-            PointRadius = 1,
-            PointStyle = ChartPointStyle.Circle,
-            // PointHoverRadius = 10,
-            Tension = 0,
-            BorderWidth = 1,
-            // Label = $"Memory",
-            Data = data.Select(x => (object)((double)x.Used / (double)x.Total * 100))
-        });
-
-        return dataSource;
+        if (AutoRefresh) LineChart?.Update(ChartAction.AddData);
     }
 
     public async Task Reload()

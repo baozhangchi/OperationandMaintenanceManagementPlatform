@@ -1,0 +1,9 @@
+@page "/networks"
+<Row RowType="RowType.Inline" ItemsPerRow="ItemsPerRow.One">
+    <BootstrapInputGroup>
+        <BootstrapInputGroupLabel DisplayText="时间范围"/>
+        <DateTimeRange MaxValue="DateTime.Today"  @bind-Value="MaxMinDateTimeRangeValue" MinValue="DateTime.Today.AddDays(-7)" AllowNull="true"/>
+        <Button Icon="fa-solid fa-magnifying-glass" IsAsync="true" OnClick="@SearchButtonClick"></Button>
+    </BootstrapInputGroup>
+</Row>
+<NetworkMonitor AutoRefresh="false" MaxMinDateTimeRangeValue="@MaxMinDateTimeRangeValue" @ref="Monitor"></NetworkMonitor>

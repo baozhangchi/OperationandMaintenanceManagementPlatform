@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using SqlSugar;
 
 namespace OMMP.Models;
@@ -8,6 +9,7 @@ namespace OMMP.Models;
 public class ApplicationInfo : TableBase
 {
     [SugarColumn(CreateTableFieldSort = 1)]
+    [Display(Name = "名称")]
     public string Name { get; set; }
 
     [SugarColumn(CreateTableFieldSort = 2)]
@@ -18,8 +20,6 @@ public class ApplicationInfo : TableBase
 
     [SugarColumn(CreateTableFieldSort = 4)]
     public string Argument { get; set; }
-    
+
     public bool AutoRestart { get; set; }
-    
-    
 }

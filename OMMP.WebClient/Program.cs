@@ -9,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddBootstrapBlazor();
-builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromMinutes(5); });
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSignalR();
 

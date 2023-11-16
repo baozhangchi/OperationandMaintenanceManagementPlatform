@@ -10,25 +10,10 @@ using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public sealed partial class NetworkMonitor
+public sealed partial class NetworkMonitor : IMonitorComponent
 {
-    private string _clientApiUrl;
-    private Timer _timer;
-
-    [Parameter]
-    public string ClientApiUrl
-    {
-        get => _clientApiUrl;
-        set
-        {
-            if (SetField(ref _clientApiUrl, value))
-            {
-                // LineChart?.Update(ChartAction.Update);
-                LineChart.Reload();
-            }
-        }
-    }
-
+    private bool _refreshDataSignaler;
+    private DateTime? _lastTime;
     public Chart LineChart { get; set; }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
@@ -41,85 +26,88 @@ public sealed partial class NetworkMonitor
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _timer = new Timer();
-        _timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
-        _timer.Elapsed += async (_, _) => { await LineChart.Update(ChartAction.AddData); };
+        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
+        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
+    }
+
+    private void OnTimerElapsed()
+    {
+        if (AutoRefresh)
+        {
+            LineChart?.Update(ChartAction.AddData);
+        }
     }
 
     private async Task<ChartDataSource> OnInit()
     {
-        _timer.Stop();
         var dataSource = new ChartDataSource();
         dataSource.Options.Title = "网络监控";
-        // dataSource.Options.LegendLabelsFontSize = 16;
         dataSource.Options.X.Title = "时间";
         dataSource.Options.Y.Title = "速率";
         dataSource.Options.ShowXScales = false;
-        // dataSource.Options.XScalesBorderColor = "red";
-        // dataSource.Options.YScalesBorderColor = "red";
-        //
-        // dataSource.Options.XScalesGridColor = "blue";
-        // dataSource.Options.XScalesGridTickColor = "blue";
-        // dataSource.Options.XScalesGridBorderColor = "blue";
-        //
-        // dataSource.Options.YScalesGridColor = "blue";
-        // dataSource.Options.YScalesGridTickColor = "blue";
-        // dataSource.Options.YScalesGridBorderColor = "blue";
-        if (string.IsNullOrWhiteSpace(ClientApiUrl))
+        dataSource.Options.LegendPosition = ChartLegendPosition.Top;
+
+        var url = MaxMinDateTimeRangeValue != null
+            ? @"api/Network/byTimePeriods/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
+            : _lastTime.HasValue
+                ? $"api/Network/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
+                : $"api/Network/1000";
+        var items = await HttpHelper.GetAsync<Dictionary<string, List<NetworkRateLog>>>(url);
+        if (!items.Any())
         {
             return dataSource;
         }
-
-        using (var client = new HttpClient())
+        var data = items.ToDictionary(x => x.Key, x => x.Value.Select(_ => new
         {
-            try
-            {
-                var responseMessage = await client.GetAsync($"{ClientApiUrl}/api/Network/1000");
-                var responseContent = await responseMessage.Content.ReadAsStringAsync();
-                var data = JsonConvert.DeserializeObject<Dictionary<string, List<NetworkRateLog>>>(responseContent)
-                    .ToDictionary(x => x.Key, x => x.Value.Select(_ => new
-                    {
-                        Time = new DateTime(_.Time.Year, _.Time.Month, _.Time.Day, _.Time.Hour, _.Time.Minute,
-                            _.Time.Second),
-                        _.Down,
-                        _.Up
-                    }).ToList());
-                dataSource.Labels =
-                    data.SelectMany(x => x.Value.Select(_ => _.Time))
-                        .Distinct().OrderBy(x => x).Select(x => x.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
-                foreach (var item in data)
-                {
-                    dataSource.Data.Add(new ChartDataset()
-                    {
-                        ShowPointStyle = false,
-                        PointRadius = 1,
-                        PointStyle = ChartPointStyle.Circle,
-                        // PointHoverRadius = 10,
-                        Tension = 0,
-                        BorderWidth = 1,
-                        Label = $"{item.Key} Down",
-                        Data = item.Value.Select(x => (object)x.Down)
-                    });
-                    dataSource.Data.Add(new ChartDataset()
-                    {
-                        ShowPointStyle = false,
-                        PointRadius = 1,
-                        PointStyle = ChartPointStyle.Circle,
-                        // PointHoverRadius = 10,
-                        Tension = 0,
-                        BorderWidth = 1,
-                        Label = $"{item.Key} Up",
-                        Data = item.Value.Select(x => (object)x.Up)
-                    });
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception);
-            }
+            Time = new DateTime(_.Time.Year, _.Time.Month, _.Time.Day, _.Time.Hour, _.Time.Minute,
+                _.Time.Second),
+            _.Down,
+            _.Up
+        }).ToList());
+
+        if (AutoRefresh)
+        {
+            _lastTime = data.SelectMany(x => x.Value).Max(x => x.Time);
         }
 
-        _timer.Start();
+        dataSource.Labels =
+            data.SelectMany(x => x.Value.Select(_ => _.Time))
+                .Distinct().OrderBy(x => x).Select(x => x.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
+        foreach (var item in data)
+        {
+            dataSource.Data.Add(new ChartDataset()
+            {
+                ShowPointStyle = false,
+                PointRadius = 1,
+                PointStyle = ChartPointStyle.Circle,
+                // PointHoverRadius = 10,
+                Tension = 0,
+                BorderWidth = 1,
+                Label = $"{item.Key} Down",
+                Data = item.Value.Select(x => (object)x.Down)
+            });
+            dataSource.Data.Add(new ChartDataset()
+            {
+                ShowPointStyle = false,
+                PointRadius = 1,
+                PointStyle = ChartPointStyle.Circle,
+                // PointHoverRadius = 10,
+                Tension = 0,
+                BorderWidth = 1,
+                Label = $"{item.Key} Up",
+                Data = item.Value.Select(x => (object)x.Up)
+            });
+        }
+
         return dataSource;
     }
+
+    public async Task Reload()
+    {
+        if (LineChart != null)
+            await LineChart.Reload();
+    }
+
+    [Parameter] public bool AutoRefresh { get; set; }
+    [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
 }

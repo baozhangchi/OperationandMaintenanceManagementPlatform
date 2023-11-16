@@ -1,13 +1,25 @@
 using System.Collections;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
+using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient;
 
 public class GlobalCache
 {
+    private MonitoringClient _currentClient;
+    public Timer Timer { get; }
+
     private GlobalCache()
     {
+        Timer = new Timer();
+        Timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+        Timer.Elapsed += (_, _) =>
+        {
+            Timer.Stop();
+            TimerElapsed?.Invoke();
+            Timer.Start();
+        };
     }
 
     public static GlobalCache Instance { get; } = new();
@@ -16,6 +28,33 @@ public class GlobalCache
     /// 监控客户端
     /// </summary>
     public MonitoringClientData MonitoringClients { get; } = new();
+
+    public MonitoringClient CurrentClient
+    {
+        get => _currentClient;
+        set
+        {
+            if (SetField(ref _currentClient, value))
+            {
+                CurrentClientChanged?.Invoke(value);
+            }
+        }
+    }
+
+    public delegate void CurrentClientChangedHandler(MonitoringClient client);
+
+    public delegate void TimerElapsedHandler();
+
+    public event TimerElapsedHandler TimerElapsed;
+
+    public event CurrentClientChangedHandler CurrentClientChanged;
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        return true;
+    }
 }
 
 public class MonitoringClientData : IEnumerable<MonitoringClient>

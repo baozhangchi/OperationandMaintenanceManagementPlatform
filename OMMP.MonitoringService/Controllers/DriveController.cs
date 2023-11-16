@@ -8,11 +8,11 @@ namespace OMMP.MonitoringService.Controllers
     [ApiController]
     public class DriveController : ControllerBase
     {
-        private readonly LogRepository<DriveLog> _partitionLogRepository;
+        private readonly LogRepository<DriveLog> _repository;
 
-        public DriveController(LogRepository<DriveLog> partitionLogRepository)
+        public DriveController(LogRepository<DriveLog> repository)
         {
-            _partitionLogRepository = partitionLogRepository;
+            _repository = repository;
         }
 
         [HttpGet("count")]
@@ -21,7 +21,7 @@ namespace OMMP.MonitoringService.Controllers
             var data = new Dictionary<string, List<DriveLog>>();
             foreach (var disk in HardwareHelper.Disks)
             {
-                data.Add(disk, await _partitionLogRepository.GetListAsync(x => x.Name == disk, count));
+                data.Add(disk, await _repository.GetLatestListAsync(x => x.Name == disk, count));
             }
 
             return data;
@@ -33,10 +33,16 @@ namespace OMMP.MonitoringService.Controllers
             var data = new List<DriveLog>();
             foreach (var disk in HardwareHelper.Disks)
             {
-                data.Add(await _partitionLogRepository.GetLatestAsync(x => x.Name == disk));
+                data.Add(await _repository.GetLatestAsync(x => x.Name == disk));
             }
 
             return data;
+        }
+
+        [HttpGet("latest/{driveName}")]
+        public async Task<DriveLog> GetPartitionLog(string driveName)
+        {
+            return await _repository.GetLatestAsync(x => x.Name == driveName.FromBase64());
         }
 
         [HttpGet("partitions")]

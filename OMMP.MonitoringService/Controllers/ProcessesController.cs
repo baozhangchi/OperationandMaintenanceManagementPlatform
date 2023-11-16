@@ -5,35 +5,34 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OMMP.Models;
-using SqlSugar;
 
 namespace OMMP.MonitoringService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CpuController : ControllerBase
+    public class ProcessesController : ControllerBase
     {
-        private readonly LogRepository<CpuLog> _repository;
+        private readonly LogRepository<ServerResourceLog> _repository;
 
-        public CpuController(LogRepository<CpuLog> repository)
+        public ProcessesController(LogRepository<ServerResourceLog> repository)
         {
             _repository = repository;
         }
 
         [HttpGet("{count}")]
-        public async Task<IEnumerable<CpuLog>> GetCpuUsed(int count)
+        public async Task<List<ServerResourceLog>> GetServerResourceLogData(int count)
         {
             return await _repository.GetLatestListAsync(count);
         }
 
         [HttpGet("{startTime}/{count}")]
-        public async Task<IEnumerable<CpuLog>> GetCpuUsed(DateTime startTime, int count)
+        public async Task<List<ServerResourceLog>> GetServerResourceLogData(DateTime startTime, int count)
         {
             return await _repository.GetLatestListAsync(x => x.Time > startTime, count);
         }
 
         [HttpGet("byTimePeriods/{startTime}/{endTime}")]
-        public async Task<IEnumerable<CpuLog>> GetCpuUsed(DateTime startTime, DateTime endTime)
+        public async Task<IEnumerable<ServerResourceLog>> GetCpuUsed(DateTime startTime, DateTime endTime)
         {
             return await _repository.GetLatestListAsync(x => x.Time >= startTime && x.Time <= endTime);
         }

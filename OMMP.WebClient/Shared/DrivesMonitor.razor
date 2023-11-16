@@ -1,0 +1,9 @@
+@if (Drives != null && Drives.Count > 0)
+{
+    <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Normal">
+        @foreach (var drive in Drives)
+        {
+            <DriveMonitor AutoRefresh="@AutoRefresh" Drive="@drive"/>
+        }
+    </Row>
+}
