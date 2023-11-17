@@ -6,7 +6,7 @@
             <Button OnClick="@AddApplication">添加应用</Button>
         </Row>
 
-        <Table TItem="ApplicationInfo" Items="@Applications" IsBordered TableSize="TableSize.Compact" OnQueryAsync="QueryAsync">
+        <Table @ref="ApplicationsView" TItem="ApplicationInfo" Items="@Applications" IsBordered TableSize="TableSize.Compact" OnQueryAsync="QueryAsync">
             <TableColumns>
                 <TableColumn @bind-Field="@context.Name" Width="180" Text="应用名称"/>
                 <TableColumn @bind-Field="@context.AppFolder" Text="应用所在目录"/>
@@ -20,13 +20,14 @@
 <Modal @ref="ApplicationDetailModal">
     <ModalDialog ShowSaveButton="true" OnSaveAsync="@SaveAsync" Title="@ApplicationDetailModalTitle" IsCentered="true" IsDraggable="true" ShowCloseButton="true" ShowHeaderCloseButton="true" IsScrolling="true" ShowResize="true">
         <BodyTemplate>
-            <ValidateForm Model="@CurrentApplication">
+            <ValidateForm Model="@CurrentApplication" @ref="CurrentApplicationValidateForm">
                 <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Inline">
                     <BootstrapInput @bind-Value="@CurrentApplication.Name"/>
-                    <BootstrapInput DisplayText="应用所在目录" @bind-Value="@CurrentApplication.AppFolder"/>
-                    <BootstrapInput DisplayText="启动文件名称" @bind-Value="@CurrentApplication.AppFileName"/>
-                    <BootstrapInput DisplayText="启动参数" @bind-Value="@CurrentApplication.Argument"/>
-                    <Switch DisplayText="是否自动启动"  @bind-Value="@CurrentApplication.AutoRestart"/>
+                    <BootstrapInput @bind-Value="@CurrentApplication.AppFolder"/>
+                    <BootstrapInput @bind-Value="@CurrentApplication.AppFileName"/>
+                    <BootstrapInput @bind-Value="@CurrentApplication.Argument"/>
+                    <Switch @bind-Value="@CurrentApplication.AutoRestart"/>
+                    <TimePickerBody></TimePickerBody>
                 </Row>
             </ValidateForm>
         </BodyTemplate>

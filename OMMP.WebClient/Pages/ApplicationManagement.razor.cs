@@ -10,6 +10,8 @@ public partial class ApplicationManagement
     public string ApplicationDetailModalTitle { get; set; }
     public IEnumerable<ApplicationInfo> Applications { get; set; }
     public ApplicationInfo CurrentApplication { get; set; }
+    public Table<ApplicationInfo> ApplicationsView { get; set; }
+    public ValidateForm CurrentApplicationValidateForm { get; set; }
 
     private async Task AddApplication()
     {
@@ -31,6 +33,16 @@ public partial class ApplicationManagement
 
     private async Task<bool> SaveAsync()
     {
-        return await Task.FromResult(true);
+        if (CurrentApplicationValidateForm.Validate())
+        {
+            var result = await HttpHelper.PostAsync<bool>("/api/app", CurrentApplication);
+            if (result)
+            {
+                await ApplicationsView.QueryAsync();
+                return await Task.FromResult(true);
+            }
+        }
+
+        return await Task.FromResult(false);
     }
 }
