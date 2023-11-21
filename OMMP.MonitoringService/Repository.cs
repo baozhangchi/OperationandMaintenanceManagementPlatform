@@ -17,6 +17,11 @@ public static class RepositoryBase
         {
             EntityService = (propertyInfo, entityColumnInfo) =>
             {
+                if (entityColumnInfo.IsIgnore)
+                {
+                    return;
+                }
+
                 if (entityColumnInfo.IsPrimarykey == false && new NullabilityInfoContext()
                         .Create(propertyInfo).WriteState is NullabilityState.Nullable)
                 {
@@ -24,9 +29,11 @@ public static class RepositoryBase
                 }
 
                 //最好排除DTO类
-                if (!entityColumnInfo.DbColumnName.Equals(propertyInfo.Name))
+                if (entityColumnInfo.DbColumnName.Equals(propertyInfo.Name))
+                {
                     entityColumnInfo.DbColumnName =
-                        UtilMethods.ToUnderLine(entityColumnInfo.DbColumnName); //ToUnderLine驼峰转下划线方法
+                        UtilMethods.ToUnderLine(entityColumnInfo.DbColumnName); //ToUnderLine驼峰转下划线方法    
+                }
             },
             EntityNameService = (_, entityInfo) => //处理表名
             {
@@ -44,6 +51,13 @@ public static class RepositoryBase
             ConnectionString = $"DataSource={Path.Combine(GlobalCache.DataFolder, $"latest.db")}",
             IsAutoCloseConnection = true,
             ConfigureExternalServices = ExternalServices
+        }, db =>
+        {
+            db.Aop.OnError = (exception) =>
+            {
+                var sql = UtilMethods.GetNativeSql(exception.Sql, (SugarParameter[])exception.Parametres);
+                Console.WriteLine(sql);
+            };
         });
         client.DbMaintenance.CreateDatabase();
         client.CodeFirst.InitTables(typeof(TableBase).Assembly.GetTypes()
@@ -65,6 +79,28 @@ public class Repository<T> : RepositoryBase<T> where T : TableBase, new()
     {
         Context = client;
     }
+
+    public override async Task<bool> InsertOrUpdateAsync(T data)
+    {
+        if (await IsAnyAsync(x => x.UUID == data.UUID))
+        {
+            return await UpdateAsync(data);
+        }
+
+        return await this.InsertAsync(data);
+    }
+
+    public override async Task<bool> InsertAsync(T insertObj)
+    {
+        var id = await this.Context.Insertable<T>(insertObj).ExecuteReturnSnowflakeIdAsync();
+        return id > 0;
+    }
+
+    public override async Task<bool> UpdateAsync(T updateObj)
+    {
+        int num = await this.Context.Updateable<T>(updateObj).WhereColumns(x => x.UUID).ExecuteCommandAsync();
+        return num > 0;
+    }
 }
 
 public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
@@ -84,7 +120,8 @@ public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
             }
         }
 
-        return await base.InsertRangeAsync(insertObjs);
+        var ids = await this.Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync();
+        return ids.Count > 0;
     }
 
     public async Task<List<T>> GetLatestListAsync(Expression<Func<T, bool>> whereExpression, int num)
@@ -149,10 +186,17 @@ public static class BackupRepository
                 ConnectionString = $"DataSource={dbFile}",
                 IsAutoCloseConnection = true,
                 ConfigureExternalServices = RepositoryBase.ExternalServices
+            }, db =>
+            {
+                db.Aop.OnError = (exception) =>
+                {
+                    var sql = UtilMethods.GetNativeSql(exception.Sql, (SugarParameter[])exception.Parametres);
+                    Console.WriteLine(sql);
+                };
             });
         client.DbMaintenance.CreateDatabase();
-        client.CodeFirst.InitTables(typeof(TableBase).Assembly.GetTypes()
-            .Where(x => !x.IsAbstract && typeof(TableBase).IsAssignableFrom(x)).ToArray());
+        client.CodeFirst.InitTables(typeof(LogTableBase).Assembly.GetTypes()
+            .Where(x => !x.IsAbstract && typeof(LogTableBase).IsAssignableFrom(x)).ToArray());
         return client;
     }
 }

@@ -10,32 +10,10 @@ namespace OMMP.MonitoringService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MemoryController : ControllerBase
+    public class MemoryController : LogController<MemoryLog>
     {
-        private readonly LogRepository<MemoryLog> _repository;
-
-        public MemoryController(LogRepository<MemoryLog> repository)
+        public MemoryController(LogRepository<MemoryLog> repository) : base(repository)
         {
-            _repository = repository;
-        }
-
-        [HttpGet("{count}")]
-        public async Task<IEnumerable<MemoryLog>> GetMemoryData(int count)
-        {
-            var items = await _repository.GetLatestListAsync(count);
-            return items;
-        }
-
-        [HttpGet("{startTime}/{count}")]
-        public async Task<IEnumerable<MemoryLog>> GetMemoryData(DateTime startTime,int count)
-        {
-            return await _repository.GetLatestListAsync(x => x.Time > startTime,count);
-        }
-
-        [HttpGet("byTimePeriods/{startTime}/{endTime}")]
-        public async Task<IEnumerable<MemoryLog>> GetCpuUsed(DateTime startTime, DateTime endTime)
-        {
-            return await _repository.GetLatestListAsync(x => x.Time >= startTime && x.Time <= endTime);
         }
     }
 }

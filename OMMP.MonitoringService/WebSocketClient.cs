@@ -50,6 +50,7 @@ public class WebSocketClient
         Console.WriteLine("断开连接");
         _connection.Closed -= ReConnect;
         _connected = false;
+        
         await ConnectAsync();
     }
 

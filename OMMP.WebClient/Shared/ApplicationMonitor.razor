@@ -1,0 +1,10 @@
+@using OMMP.Models
+<Row RowType="RowType.Inline" ItemsPerRow="ItemsPerRow.Four">
+    <BootstrapInputGroup>
+        <BootstrapInputGroupLabel DisplayText="时间范围"/>
+        <DateTimeRange MaxValue="DateTime.Today" @ref="_timeRangeSelector" MinValue="DateTime.Today.AddDays(-7)" AllowNull="true"/>
+        <Button Icon="fa-solid fa-magnifying-glass" IsAsync="true" OnClick="@SearchButtonClick"></Button>
+    </BootstrapInputGroup>
+    <Button Icon="fa-solid fa-cloud-arrow-up" IsAsync="true" Text="更新"></Button>
+</Row>
+<Chart ChartType="ChartType.Line" OnInitAsync="@InitAsync" @ref="LineChart"></Chart>

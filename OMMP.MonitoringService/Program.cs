@@ -1,10 +1,10 @@
-using System.Net;
-using System.Net.Sockets;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using OMMP.MonitoringService;
 using OMMP.MonitoringService.BackgroundServices;
+using SqlSugar;
 
+SnowFlakeSingle.WorkId = 1;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -13,8 +13,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// builder.Services.AddSingleton(GlobalCache.Client);
-builder.Services.AddScoped(context => RepositoryBase.GetClient());
+builder.Services.AddScoped(_ => RepositoryBase.GetClient());
 builder.Services.AddHostedService<ServerResourceMonitoringService>()
     .AddHostedService<ApplicationResourceMonitoringService>();
 builder.Services.AddScoped(typeof(Repository<>));

@@ -41,8 +41,8 @@ namespace OMMP.MonitoringService.Controllers
         /// </summary>
         /// <param name="uuid">应用ID</param>
         /// <returns></returns>
-        [HttpDelete]
-        public async Task<bool> RemoveApplication(string uuid)
+        [HttpDelete("{uuid}")]
+        public async Task<bool> RemoveApplication(long uuid)
         {
             return await _applicationRepository.DeleteByIdAsync(uuid);
         }

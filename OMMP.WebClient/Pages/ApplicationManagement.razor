@@ -1,35 +1,37 @@
 @page "/applications"
 @using OMMP.Models
-<Tab IsLazyLoadTabItem="true" ShowExtendButtons="true">
-    <TabItem Text="应用管理">
-        <Row>
-            <Button OnClick="@AddApplication">添加应用</Button>
-        </Row>
 
-        <Table @ref="ApplicationsView" TItem="ApplicationInfo" Items="@Applications" IsBordered TableSize="TableSize.Compact" OnQueryAsync="QueryAsync">
+<Tab @ref="RootTab" IsLazyLoadTabItem="true" ShowExtendButtons="true" ShowClose="true" OnCloseTabItemAsync="@CloseTabItemAsync">
+    <TabItem Text="应用管理" Closable="false">
+        <Table @ref="ApplicationsView" TItem="ApplicationInfo" ShowLineNo="true"
+               Items="@Applications"
+               TableSize="TableSize.Normal" EditDialogShowMaximizeButton="false" EditDialogIsDraggable="true" EditDialogSize="Size.Medium"
+               IsStriped="true" IsBordered="true" ShowExtendButtons="true" ShowSkeleton="true" ShowEditButton="false" ShowDeleteButton="false"
+               ShowToolbar="true" OnDeleteAsync="DeleteApplicationAsync" AddModalTitle="添加应用" EditModalTitle="修改应用信息"
+               ClickToSelect="true" DoubleClickToEdit="false" OnSaveAsync="SaveApplicationAsync"
+               OnQueryAsync="QueryAsync" OnDoubleClickRowCallback="@OpenApplicationPage">
             <TableColumns>
                 <TableColumn @bind-Field="@context.Name" Width="180" Text="应用名称"/>
                 <TableColumn @bind-Field="@context.AppFolder" Text="应用所在目录"/>
                 <TableColumn @bind-Field="@context.AppFileName" Text="启动文件名称"/>
                 <TableColumn @bind-Field="@context.Argument" Text="启动参数"/>
-                <TableColumn @bind-Field="@context.AutoRestart" Text="是否自动启动"/>
+                <TableColumn @bind-Field="@context.AutoRestart" Text="是否自动启动">
+                    <Template Context="value">
+                        <Checkbox Value="@value.Value" IsDisabled="true"></Checkbox>
+                    </Template>
+                </TableColumn>
+                <TableColumn @bind-Field="@context.AutoRestartTimeValue" Text="自动重启时间"></TableColumn>
             </TableColumns>
+            <EditTemplate>
+                <Row ItemsPerRow="ItemsPerRow.One" RowType="RowType.Inline">
+                    <BootstrapInput @bind-Value="@context.Name"/>
+                    <BootstrapInput @bind-Value="@context.AppFolder"/>
+                    <BootstrapInput @bind-Value="@context.AppFileName"/>
+                    <BootstrapInput @bind-Value="@context.Argument"/>
+                    <Switch @bind-Value="@context.AutoRestart"/>
+                    <BootstrapInput @bind-Value="@context.AutoRestartTimeValue" type="time"></BootstrapInput>
+                </Row>
+            </EditTemplate>
         </Table>
     </TabItem>
 </Tab>
-<Modal @ref="ApplicationDetailModal">
-    <ModalDialog ShowSaveButton="true" OnSaveAsync="@SaveAsync" Title="@ApplicationDetailModalTitle" IsCentered="true" IsDraggable="true" ShowCloseButton="true" ShowHeaderCloseButton="true" IsScrolling="true" ShowResize="true">
-        <BodyTemplate>
-            <ValidateForm Model="@CurrentApplication" @ref="CurrentApplicationValidateForm">
-                <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Inline">
-                    <BootstrapInput @bind-Value="@CurrentApplication.Name"/>
-                    <BootstrapInput @bind-Value="@CurrentApplication.AppFolder"/>
-                    <BootstrapInput @bind-Value="@CurrentApplication.AppFileName"/>
-                    <BootstrapInput @bind-Value="@CurrentApplication.Argument"/>
-                    <Switch @bind-Value="@CurrentApplication.AutoRestart"/>
-                    <TimePickerBody></TimePickerBody>
-                </Row>
-            </ValidateForm>
-        </BodyTemplate>
-    </ModalDialog>
-</Modal>
