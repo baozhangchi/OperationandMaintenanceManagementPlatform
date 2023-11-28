@@ -67,6 +67,10 @@ public partial class DriveMonitor : IMonitorComponent, IDisposable
         dataSource.Options.Colors.Add("Free", "#119c60");
         dataSource.Options.Colors.Add("Used", "red");
         if (string.IsNullOrWhiteSpace(Drive)) return dataSource;
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return dataSource;
+        }
 
         // var url = $"api/Drive/latest/{Drive.ToBase64()}";
         // var data = await HttpHelper.GetAsync<DriveLog>(url);

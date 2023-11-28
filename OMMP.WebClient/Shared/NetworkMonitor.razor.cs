@@ -59,6 +59,10 @@ public sealed partial class NetworkMonitor : IMonitorComponent, IDisposable
         dataSource.Options.Y.Title = "速率";
         dataSource.Options.ShowXScales = false;
         dataSource.Options.LegendPosition = ChartLegendPosition.Top;
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return dataSource;
+        }
 
         var arg = MaxMinDateTimeRangeValue != default
             ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)

@@ -3,7 +3,6 @@
 <Tab @ref="RootTab" IsLazyLoadTabItem="true" ShowExtendButtons="true" ShowClose="true" OnCloseTabItemAsync="@CloseTabItemAsync">
     <TabItem Text="应用管理" Closable="false">
         <Table @ref="ApplicationsView" TItem="ApplicationInfo" ShowLineNo="true"
-               Items="@Applications"
                TableSize="TableSize.Normal" EditDialogShowMaximizeButton="false" EditDialogIsDraggable="true" EditDialogSize="Size.Medium"
                IsStriped="true" IsBordered="true" ShowExtendButtons="true" ShowSkeleton="true" ShowEditButton="false" ShowDeleteButton="false"
                ShowToolbar="true" OnDeleteAsync="DeleteApplicationAsync" AddModalTitle="添加应用" EditModalTitle="修改应用信息"

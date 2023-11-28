@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using OMMP.Models;
 using OMMP.MonitoringService;
 using OMMP.MonitoringService.BackgroundServices;
 using SqlSugar;
@@ -13,7 +14,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped(_ => RepositoryBase.GetClient());
+// builder.Services.AddScoped(_ => RepositoryBase.GetClient());
 builder.Services.AddHostedService<ServerResourceMonitoringService>()
     .AddHostedService<ApplicationResourceMonitoringService>();
 builder.Services.AddScoped(typeof(Repository<>));

@@ -37,6 +37,10 @@ public partial class ProcessesMonitor : IMonitorComponent, IDisposable
         dataSource.Options.Y.Title = "进程数";
         dataSource.Options.ShowXScales = false;
         dataSource.Options.ShowLegend = false;
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return dataSource;
+        }
 
         var arg = MaxMinDateTimeRangeValue != default
             ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)

@@ -1,0 +1,51 @@
+@using OMMP.WebClient.Models
+@using OMMP.Models
+<Table TItem="MonitoringServer" ShowLineNo="true"
+       TableSize="TableSize.Normal" EditDialogShowMaximizeButton="false" EditDialogIsDraggable="true" EditDialogSize="Size.Medium"
+       IsStriped="true" IsBordered="true" OnQueryAsync="@QueryAsync" OnSaveAsync="@SaveAsync" ShowExtendButtons="true" AddModalTitle="新增服务器" EditModalTitle="修改服务器信息" ShowSkeleton="true" ShowEditButton="false" ShowDeleteButton="false"
+       ShowToolbar="true">
+    <TableColumns>
+        <TableColumn @bind-Field="@context.IpAddress" Width="180"/>
+        <TableColumn @bind-Field="@context.Username"/>
+        <TableColumn @bind-Field="@context.AppFolder"/>
+    </TableColumns>
+    <EditTemplate>
+        <Row ItemsPerRow="ItemsPerRow.One" RowType="RowType.Inline">
+            <BootstrapInput @bind-Value="@context.IpAddress"/>
+            <BootstrapInput @bind-Value="@context.Username"/>
+            <BootstrapInput @bind-Value="@context.Password" type="password"/>
+            <BootstrapInput @bind-Value="@context.AppFolder"/>
+        </Row>
+    </EditTemplate>
+</Table>
+
+@code {
+
+    [Inject]
+    IServiceProvider ServiceProvider { get; set; }
+
+
+    private async Task<bool> SaveAsync(MonitoringServer server, ItemChangedType changedType)
+    {
+        var repository = ServiceProvider.GetRequiredService<Repository<MonitoringServer>>();
+        var result = await repository.InsertOrUpdateAsync(server);
+        if (result)
+        {
+            // TODO
+            // ssh上传最新的包到服务器并启动服务
+        }
+        return result;
+    }
+
+    private async Task<QueryData<MonitoringServer>> QueryAsync(QueryPageOptions arg)
+    {
+        var repository = ServiceProvider.GetRequiredService<Repository<MonitoringServer>>();
+        var data = await repository.GetListAsync();
+        return new QueryData<MonitoringServer>()
+        {
+            Items = data,
+            TotalCount = data.Count
+        };
+    }
+
+}

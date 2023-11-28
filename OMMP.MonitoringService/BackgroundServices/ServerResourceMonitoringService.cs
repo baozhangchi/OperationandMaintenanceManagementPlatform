@@ -8,7 +8,7 @@ public class ServerResourceMonitoringService : TimeBackgroundService
 {
     protected override async Task ExecuteAsync(DateTime currentTime)
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
 
         var repository = LogRepository<NetworkLog>.CreateInstance(client);
         var ipAddress = HardwareHelper.GetIpAddresses();

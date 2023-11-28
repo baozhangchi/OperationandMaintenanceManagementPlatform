@@ -14,7 +14,7 @@
             </div>
         </Side>
         <Main>
-            @if (SelectedClient != null)
+            @if (!string.IsNullOrWhiteSpace(ClientId))
             {
                 @Body
             }

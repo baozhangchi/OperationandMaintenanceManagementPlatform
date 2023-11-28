@@ -44,7 +44,7 @@ public class ApplicationResourceMonitoringService : TimeBackgroundService
 
     protected override async Task ExecuteAsync(DateTime currentTime)
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var applications = await new Repository<ApplicationInfo>(client).GetListAsync();
         var repository = LogRepository<ApplicationLog>.CreateInstance(client);
         List<string> networkMonitorResults = null;

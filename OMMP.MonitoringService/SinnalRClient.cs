@@ -48,7 +48,6 @@ public class SinnalRClient : IMonitoringClientHub
                 _connection.On<long, QueryLogArgs, List<ApplicationLog>>(
                     nameof(IMonitoringClientHub.GetApplicationLogs), GetApplicationLogs);
                 _connection.Closed += ReConnect;
-                await _connection.SendAsync("RegisterClient", "MonitorClient",CancellationToken.None);
             }
             catch (HttpRequestException httpRequestException)
             {
@@ -75,7 +74,7 @@ public class SinnalRClient : IMonitoringClientHub
 
     public async Task<List<ApplicationInfo>> GetApplications()
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var repository = new Repository<ApplicationInfo>(client);
         var items = await repository.GetListAsync();
         return items;
@@ -83,7 +82,7 @@ public class SinnalRClient : IMonitoringClientHub
 
     public async Task<List<ApplicationLog>> GetApplicationLogs(long applicationId, QueryLogArgs queryLogArgs)
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var repository = LogRepository<ApplicationLog>.CreateInstance(client);
         var expression = new Expressionable<ApplicationLog>();
         expression.And(x => x.ApplicationId == applicationId);
@@ -103,7 +102,7 @@ public class SinnalRClient : IMonitoringClientHub
 
     public async Task<bool> SaveApplication(ApplicationInfo application)
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var repository = new Repository<ApplicationInfo>(client);
         return await repository.InsertOrUpdateAsync(application);
     }
@@ -120,7 +119,7 @@ public class SinnalRClient : IMonitoringClientHub
 
     public async Task<Dictionary<string, List<NetworkRateLog>>> GetNetworkRateLogs(QueryLogArgs args)
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var repository = LogRepository<NetworkRateLog>.CreateInstance(client);
 
         var items = new Dictionary<string, List<NetworkRateLog>>();
@@ -152,7 +151,7 @@ public class SinnalRClient : IMonitoringClientHub
 
     public async Task<DriveLog> GetPartitionLog(string drive)
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var repository = LogRepository<DriveLog>.CreateInstance(client);
         return await repository.GetLatestAsync(x => x.Name == drive);
     }
@@ -162,10 +161,25 @@ public class SinnalRClient : IMonitoringClientHub
         return await Task.FromResult(HardwareHelper.Disks);
     }
 
+    public Task UpdateApplication(ReadOnlyMemory<byte> buffer)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ReadOnlyMemory<byte>> GetApplicationBackup()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ReadOnlyMemory<byte>> GetApplicationLogs()
+    {
+        throw new NotImplementedException();
+    }
+
     private async Task<List<T>> GetLogData<T>(QueryLogArgs args)
         where T : LogTableBase, new()
     {
-        var client = RepositoryBase.GetClient();
+        var client = RepositoryBase.GetClient(GlobalCache.DataSource);
         var repository = LogRepository<T>.CreateInstance(client);
         var expression = new Expressionable<T>();
 

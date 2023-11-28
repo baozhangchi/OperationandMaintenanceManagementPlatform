@@ -7,102 +7,6 @@ using SqlSugar;
 
 namespace OMMP.MonitoringService;
 
-public static class RepositoryBase
-{
-    public static ConfigureExternalServices ExternalServices { get; }
-
-    static RepositoryBase()
-    {
-        ExternalServices = new ConfigureExternalServices()
-        {
-            EntityService = (propertyInfo, entityColumnInfo) =>
-            {
-                if (entityColumnInfo.IsIgnore)
-                {
-                    return;
-                }
-
-                if (entityColumnInfo.IsPrimarykey == false && new NullabilityInfoContext()
-                        .Create(propertyInfo).WriteState is NullabilityState.Nullable)
-                {
-                    entityColumnInfo.IsNullable = true;
-                }
-
-                //最好排除DTO类
-                if (entityColumnInfo.DbColumnName.Equals(propertyInfo.Name))
-                {
-                    entityColumnInfo.DbColumnName =
-                        UtilMethods.ToUnderLine(entityColumnInfo.DbColumnName); //ToUnderLine驼峰转下划线方法    
-                }
-            },
-            EntityNameService = (_, entityInfo) => //处理表名
-            {
-                //最好排除DTO类
-                entityInfo.DbTableName = UtilMethods.ToUnderLine(entityInfo.DbTableName); //ToUnderLine驼峰转下划线方法
-            }
-        };
-    }
-
-    public static ISqlSugarClient GetClient()
-    {
-        var client = new SqlSugarClient(new ConnectionConfig()
-        {
-            DbType = DbType.Sqlite,
-            ConnectionString = $"DataSource={Path.Combine(GlobalCache.DataFolder, $"latest.db")}",
-            IsAutoCloseConnection = true,
-            ConfigureExternalServices = ExternalServices
-        }, db =>
-        {
-            db.Aop.OnError = (exception) =>
-            {
-                var sql = UtilMethods.GetNativeSql(exception.Sql, (SugarParameter[])exception.Parametres);
-                Console.WriteLine(sql);
-            };
-        });
-        client.DbMaintenance.CreateDatabase();
-        client.CodeFirst.InitTables(typeof(TableBase).Assembly.GetTypes()
-            .Where(x => !x.IsAbstract && typeof(TableBase).IsAssignableFrom(x)).ToArray());
-        return client;
-    }
-}
-
-public abstract class RepositoryBase<T> : SimpleClient<T>, IDisposable where T : TableBase, new()
-{
-    public void Dispose()
-    {
-    }
-}
-
-public class Repository<T> : RepositoryBase<T> where T : TableBase, new()
-{
-    public Repository(ISqlSugarClient client)
-    {
-        Context = client;
-    }
-
-    public override async Task<bool> InsertOrUpdateAsync(T data)
-    {
-        if (await IsAnyAsync(x => x.UUID == data.UUID))
-        {
-            return await UpdateAsync(data);
-        }
-
-        return await this.InsertAsync(data);
-    }
-
-    public override async Task<bool> InsertAsync(T insertObj)
-    {
-        var id = await this.Context.Insertable<T>(insertObj).ExecuteReturnSnowflakeIdAsync();
-        return id > 0;
-    }
-
-    public override async Task<bool> UpdateAsync(T updateObj)
-    {
-        int num = await this.Context.Updateable<T>(updateObj).WhereColumns(x => x.UUID).ExecuteCommandAsync();
-        return num > 0;
-    }
-}
-
 public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
 {
     public override async Task<bool> InsertRangeAsync(List<T> insertObjs)
@@ -120,7 +24,7 @@ public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
             }
         }
 
-        var ids = await this.Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync();
+        var ids = await Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync();
         return ids.Count > 0;
     }
 
@@ -177,10 +81,8 @@ public static class BackupRepository
             }).ToList();
         var dbFile = dbFileMap.FirstOrDefault(x => x.From <= day.Date && x.To > day.Date)?.File;
         if (dbFile == null)
-        {
             dbFile = new FileInfo(Path.Combine(GlobalCache.DataFolder,
                 $"{day:yyyyMMdd}-{day.AddDays(7):yyyyMMdd}.db.bak"));
-        }
 
         var client = new SqlSugarClient(
             new ConnectionConfig()
@@ -197,7 +99,7 @@ public static class BackupRepository
                     Console.WriteLine(sql);
                 };
             });
-        var createResult = client.DbMaintenance.CreateDatabase();
+        client.DbMaintenance.CreateDatabase();
         client.CodeFirst.InitTables(typeof(LogTableBase).Assembly.GetTypes()
             .Where(x => !x.IsAbstract && typeof(LogTableBase).IsAssignableFrom(x)).ToArray());
         return client;
@@ -217,6 +119,6 @@ public class BackupRepository<T> : Repository<T> where T : TableBase, new()
 
     public override async Task<bool> InsertRangeAsync(List<T> insertObjs)
     {
-        return (await this.Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync()).Count > 0;
+        return (await Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync()).Count > 0;
     }
 }

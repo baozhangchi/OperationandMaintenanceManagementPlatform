@@ -11,7 +11,8 @@ namespace OMMP.WebClient.Pages;
 
 public partial class ApplicationManagement
 {
-    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [CascadingParameter(Name = "ClientId")]
+    private string ClientId { get; set; }
 
     [Inject] [NotNull] private DialogService? DialogService { get; set; }
     [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
@@ -19,7 +20,6 @@ public partial class ApplicationManagement
     [Inject] private NavigationManager Navigation { get; set; }
     public Modal ApplicationDetailModal { get; set; }
     public string ApplicationDetailModalTitle { get; set; }
-    public IEnumerable<ApplicationInfo> Applications { get; set; }
     public ApplicationInfo CurrentApplication { get; set; }
     public Table<ApplicationInfo> ApplicationsView { get; set; }
     public ValidateForm CurrentApplicationValidateForm { get; set; }
@@ -63,6 +63,11 @@ public partial class ApplicationManagement
 
     private async Task<QueryData<ApplicationInfo>> QueryAsync(QueryPageOptions arg)
     {
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return new QueryData<ApplicationInfo>();
+        }
+
         var data = await HubContext.Clients.Client(ClientId)
             .InvokeAsync<List<ApplicationInfo>>(nameof(IMonitoringClientHub.GetApplications), CancellationToken.None);
         return new QueryData<ApplicationInfo>()

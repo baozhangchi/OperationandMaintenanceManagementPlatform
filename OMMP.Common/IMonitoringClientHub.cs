@@ -48,4 +48,10 @@ public interface IMonitoringClientHub
     Task<DriveLog> GetPartitionLog(string drive);
 
     Task<List<string>> GetPartitions();
+
+    Task UpdateApplication(ReadOnlyMemory<byte> buffer);
+
+    Task<ReadOnlyMemory<byte>> GetApplicationBackup();
+
+    Task<ReadOnlyMemory<byte>> GetApplicationLogs();
 }

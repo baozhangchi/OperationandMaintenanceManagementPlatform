@@ -7,4 +7,6 @@ internal static class GlobalCache
     }
 
     public static string DataFolder { get; set; }
+
+    public static string DataSource => Path.Combine(DataFolder, $"latest.db");
 }

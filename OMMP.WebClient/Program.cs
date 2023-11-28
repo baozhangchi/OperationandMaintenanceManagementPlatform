@@ -1,5 +1,5 @@
-using System.Text;
-using Microsoft.AspNetCore.WebSockets;
+using System.Reflection;
+using OMMP.Models;
 using OMMP.WebClient;
 using OMMP.WebClient.Hubs;
 using OMMP.WebClient.States;
@@ -14,7 +14,13 @@ builder.Services.AddSingleton(new GlobalCache());
 builder.Services.AddSingleton<IClientState, ClientState>();
 builder.Services.AddSingleton<IMonitorState, MonitorState>();
 builder.Services.AddSignalR(o => { o.MaximumReceiveMessageSize = 1024 * 1024; });
+var dataFolder = builder.Configuration["DataFolder"];
+if (string.IsNullOrWhiteSpace(dataFolder)) dataFolder = AppDomain.CurrentDomain.BaseDirectory;
 
+builder.Services.AddScoped(_ => RepositoryBase.GetClient(Path.Combine(dataFolder, $"system.db"),
+    Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(TableBase).IsAssignableFrom(x)).ToArray()));
+
+builder.Services.AddScoped(typeof(Repository<>));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,6 +31,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.Services.GetRequiredService<GlobalCache>().DataFolder = dataFolder;
 app.UseStaticFiles();
 
 app.UseRouting();

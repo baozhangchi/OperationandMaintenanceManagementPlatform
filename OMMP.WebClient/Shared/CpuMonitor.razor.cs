@@ -53,6 +53,10 @@ public sealed partial class CpuMonitor : IMonitorComponent, IDisposable
         dataSource.Options.Y.Title = "使用率";
         dataSource.Options.ShowXScales = false;
         dataSource.Options.ShowLegend = false;
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return dataSource;
+        }
 
         var arg = MaxMinDateTimeRangeValue != default
             ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)

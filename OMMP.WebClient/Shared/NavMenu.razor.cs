@@ -1,9 +1,11 @@
 using BootstrapBlazor.Components;
+using Microsoft.AspNetCore.Components;
 
 namespace OMMP.WebClient.Shared;
 
 public partial class NavMenu
 {
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
     private IEnumerable<MenuItem> MenuItems { get; set; }
 
     protected override void OnInitialized()
@@ -15,7 +17,7 @@ public partial class NavMenu
         items.Add(new MenuItem("内存", "/memory", "fa-solid fa-memory"));
         items.Add(new MenuItem("网络", "/networks", "fa-solid fa-network-wired"));
         items.Add(new MenuItem("应用管理", "/applications", "fa-solid fa-grip"));
-        items.Add(new MenuItem("系统管理", "/SystemManagement", "fa-solid fa-wrench"));
+        // items.Add(new MenuItem("系统管理", "/SystemManagement", "fa-solid fa-wrench"));
         MenuItems = items;
     }
 }

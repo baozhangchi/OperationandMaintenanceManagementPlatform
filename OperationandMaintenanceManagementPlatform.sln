@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.Common", "OMMP.Common\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.WebClient", "OMMP.WebClient\OMMP.WebClient.csproj", "{CD9C4AE9-08E2-47B1-9B90-9939E73E2F48}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdater", "AutoUpdater\AutoUpdater.csproj", "{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{CD9C4AE9-08E2-47B1-9B90-9939E73E2F48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD9C4AE9-08E2-47B1-9B90-9939E73E2F48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD9C4AE9-08E2-47B1-9B90-9939E73E2F48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

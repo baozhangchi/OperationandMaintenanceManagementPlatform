@@ -1,15 +1,14 @@
 @page "/SystemManagement"
 <Tab>
+    <TabItem Text="服务器管理">
+        <MonitoringServerManagement></MonitoringServerManagement>
+    </TabItem>
     <TabItem Text="版本管理">
-        <Row>
-            <Button Text="选择新版文件"></Button>
-        </Row>
-        @* <Table TItem="string" AutoGenerateColumns="true"> *@
-        @*      *@
-        @* </Table> *@
+        <MonitorPackageManagement></MonitorPackageManagement>
     </TabItem>
 </Tab>
 
 @code {
+
 
 }

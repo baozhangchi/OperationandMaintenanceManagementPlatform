@@ -17,6 +17,10 @@ public partial class DrivesMonitor : IMonitorComponent
 
     protected override async Task OnInitializedAsync()
     {
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return;
+        }
         Drives = await HubContext.Clients.Client(ClientId)
             .InvokeAsync<List<string>>(nameof(IMonitoringClientHub.GetPartitions), CancellationToken.None);
     }

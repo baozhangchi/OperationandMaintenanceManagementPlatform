@@ -1,12 +1,21 @@
-@using OMMP.Models
-<Row RowType="RowType.Inline" ItemsPerRow="ItemsPerRow.Four">
-    <BootstrapInputGroup>
-        <BootstrapInputGroupLabel DisplayText="时间范围"/>
-        <DateTimeRange MaxValue="DateTime.Today" @ref="_timeRangeSelector" MinValue="DateTime.Today.AddDays(-7)" AllowNull="true"/>
-        <Button Icon="fa-solid fa-magnifying-glass" IsAsync="true" OnClick="@SearchButtonClick"></Button>
-    </BootstrapInputGroup>
-    <Button Icon="fa-solid fa-cloud-arrow-up" IsAsync="true" Text="更新"></Button>
-</Row>
+<Stack IsRow="true">
+    <StackItem>
+        <BootstrapInputGroup>
+            <BootstrapInputGroupLabel DisplayText="时间范围"/>
+            <DateTimeRange MaxValue="DateTime.Today" @ref="_timeRangeSelector" MinValue="DateTime.Today.AddDays(-7)" AllowNull="true"/>
+            <Button Icon="fa-solid fa-magnifying-glass" IsAsync="true" OnClick="@SearchButtonClick"></Button>
+        </BootstrapInputGroup>
+    </StackItem>
+    <StackItem class="stackItem">
+        <ButtonUpload TValue="string" OnChange="@OnClickToUpload" ShowUploadFileList="false" style="margin-top: 0!important;" BrowserButtonText="更新" IsDirectory="false" Accept="application/zip" ShowProgress="true" BrowserButtonIcon="fa-solid fa-cloud-arrow-up" class="mt-3"></ButtonUpload>
+    </StackItem>
+    <StackItem class="stackItem">
+        <Button Text="备份" OnClick="@BackupApplicationAsync"></Button>
+    </StackItem>
+    <StackItem class="stackItem">
+        <Button Text="下载日志" OnClick="@DownloadLogsAsync"></Button>
+    </StackItem>
+</Stack>
 <Row ItemsPerRow="ItemsPerRow.One">
     <Chart ChartType="ChartType.Line" OnInitAsync="@InitAsync" @ref="LineChart"></Chart>
 </Row>

@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.JSInterop;
 using OMMP.Common;
 using OMMP.Models;
 using OMMP.WebClient.Hubs;
@@ -12,8 +13,15 @@ namespace OMMP.WebClient.Shared;
 public partial class ApplicationMonitor : IMonitorComponent, IDisposable
 {
     private Timer _timer;
-    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+
+    [CascadingParameter(Name = "ClientId")]
+    private string ClientId { get; set; }
+
     [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
+    [Inject] private ToastService ToastService { get; set; }
+    [Inject] private IJSRuntime JS { get; set; }
+
+    [Inject] private DialogService DialogService { get; set; }
     [Parameter] public bool AutoRefresh { get; set; }
     [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
 
@@ -46,6 +54,11 @@ public partial class ApplicationMonitor : IMonitorComponent, IDisposable
         dataSource.Options.Y.Title = "速率";
         dataSource.Options.ShowXScales = false;
         dataSource.Options.LegendPosition = ChartLegendPosition.Top;
+
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            return dataSource;
+        }
 
 
         var arg = MaxMinDateTimeRangeValue != default
@@ -206,5 +219,50 @@ public partial class ApplicationMonitor : IMonitorComponent, IDisposable
             _timer.Stop();
             _timer.Dispose();
         }
+    }
+
+    private async Task OnClickToUpload(UploadFile file)
+    {
+        var result = await HubContext.Clients.Client(ClientId).InvokeAsync<bool>(
+            nameof(IMonitoringClientHub.UpdateApplication),
+            await file.GetBytesAsync(), CancellationToken.None);
+        if (result)
+            await ToastService.Success("更新", $"更新成功");
+        else
+            await ToastService.Error("更新", $"更新失败");
+    }
+
+    private async Task BackupApplicationAsync()
+    {
+        var buffer = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<ReadOnlyMemory<byte>>(nameof(IMonitoringClientHub.GetApplicationBackup),
+                CancellationToken.None);
+        using var streamRef = new DotNetStreamReference(stream: new MemoryStream(buffer.ToArray()));
+        await JS.InvokeVoidAsync("downloadFileFromStream", $"{Application.Name}-{DateTime.Now:yyyyMMddHHmmss}",
+            streamRef);
+    }
+
+    private async Task DownloadLogsAsync()
+    {
+        var option = new SearchDialogOption<AppLogSearchItem>()
+        {
+            Title = "日志下载",
+            ResetButtonText = "取消",
+            QueryButtonText = "下载",
+            Model = new AppLogSearchItem(),
+            ItemsPerRow = 2,
+            RowType = RowType.Inline,
+            OnCloseAsync = () => { return Task.CompletedTask; },
+            OnResetSearchClick = () => { return Task.CompletedTask; },
+            OnSearchClick = () => { return Task.CompletedTask; }
+        };
+
+        await DialogService.ShowSearchDialog(option);
+
+        var buffer = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<ReadOnlyMemory<byte>>(nameof(IMonitoringClientHub.GetApplicationLogs), CancellationToken.None);
+        using var streamRef = new DotNetStreamReference(stream: new MemoryStream(buffer.ToArray()));
+        await JS.InvokeVoidAsync("downloadFileFromStream", $"{Application.Name}-{DateTime.Now:yyyyMMddHHmmss}",
+            streamRef);
     }
 }
