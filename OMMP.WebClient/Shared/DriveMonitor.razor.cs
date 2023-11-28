@@ -1,18 +1,25 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Web;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using OMMP.Common;
 using OMMP.Models;
+using OMMP.WebClient.Hubs;
 using Console = System.Console;
+using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public partial class DriveMonitor : IMonitorComponent
+public partial class DriveMonitor : IMonitorComponent, IDisposable
 {
     private string _drive;
     private bool _refreshDataSignaler;
+    private Timer _timer;
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
 
     [Parameter]
     public string Drive
@@ -35,9 +42,15 @@ public partial class DriveMonitor : IMonitorComponent
 
     protected override void OnInitialized()
     {
+        if (AutoRefresh)
+        {
+            _timer = new Timer();
+            _timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+            _timer.Elapsed += (s, e) => { PieChart?.Update(ChartAction.Update); };
+            _timer.Start();
+        }
+
         base.OnInitialized();
-        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
-        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
     }
 
     private void OnTimerElapsed()
@@ -55,8 +68,10 @@ public partial class DriveMonitor : IMonitorComponent
         dataSource.Options.Colors.Add("Used", "red");
         if (string.IsNullOrWhiteSpace(Drive)) return dataSource;
 
-        var url = $"api/Drive/latest/{Drive.ToBase64()}";
-        var data = await HttpHelper.GetAsync<DriveLog>(url);
+        // var url = $"api/Drive/latest/{Drive.ToBase64()}";
+        // var data = await HttpHelper.GetAsync<DriveLog>(url);
+        var data = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<DriveLog>(nameof(IMonitoringClientHub.GetPartitionLog), Drive, CancellationToken.None);
 
         if (data == null) return dataSource;
 
@@ -83,4 +98,13 @@ public partial class DriveMonitor : IMonitorComponent
 
     [Parameter] public bool AutoRefresh { get; set; }
     [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
+
+    public void Dispose()
+    {
+        if (_timer != null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
+        }
+    }
 }

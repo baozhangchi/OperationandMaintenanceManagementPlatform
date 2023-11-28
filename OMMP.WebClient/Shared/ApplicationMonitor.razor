@@ -7,4 +7,6 @@
     </BootstrapInputGroup>
     <Button Icon="fa-solid fa-cloud-arrow-up" IsAsync="true" Text="更新"></Button>
 </Row>
-<Chart ChartType="ChartType.Line" OnInitAsync="@InitAsync" @ref="LineChart"></Chart>
+<Row ItemsPerRow="ItemsPerRow.One">
+    <Chart ChartType="ChartType.Line" OnInitAsync="@InitAsync" @ref="LineChart"></Chart>
+</Row>

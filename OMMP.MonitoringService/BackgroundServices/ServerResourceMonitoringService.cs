@@ -6,7 +6,7 @@ namespace OMMP.MonitoringService.BackgroundServices;
 
 public class ServerResourceMonitoringService : TimeBackgroundService
 {
-    protected override async Task ExecuteAsync()
+    protected override async Task ExecuteAsync(DateTime currentTime)
     {
         var client = RepositoryBase.GetClient();
 
@@ -16,14 +16,14 @@ public class ServerResourceMonitoringService : TimeBackgroundService
         {
             NetworkCardName = x.Item1,
             IpAddress = x.Item2,
-            Time = CurrentTime
+            Time = currentTime
         }).ToList());
 
         var serverResourceRepository = LogRepository<ServerResourceLog>.CreateInstance(client);
         await serverResourceRepository.InsertAsync(new ServerResourceLog()
         {
             ProcessCount = Process.GetProcesses().Length,
-            Time = CurrentTime
+            Time = currentTime
         });
 
         var networkRepository = LogRepository<NetworkRateLog>.CreateInstance(client);
@@ -34,7 +34,7 @@ public class ServerResourceMonitoringService : TimeBackgroundService
                 NetworkCard = networkCardName,
                 Down = down,
                 Up = up,
-                Time = CurrentTime
+                Time = currentTime
             });
         }
 
@@ -45,14 +45,14 @@ public class ServerResourceMonitoringService : TimeBackgroundService
             Free = free,
             Total = total,
             Used = used,
-            Time = CurrentTime
+            Time = currentTime
         });
 
         var cpuRepository = LogRepository<CpuLog>.CreateInstance(client);
         await cpuRepository.InsertAsync(new CpuLog()
         {
             Used = HardwareHelper.GetCpuUsed(),
-            Time = CurrentTime
+            Time = currentTime
         });
 
         var diskRepository = LogRepository<DriveLog>.CreateInstance(client);
@@ -65,7 +65,7 @@ public class ServerResourceMonitoringService : TimeBackgroundService
                 Total = x.Item2,
                 Free = x.Item3,
                 Used = x.Item4,
-                Time = CurrentTime
+                Time = currentTime
             }).ToList());
         }
     }

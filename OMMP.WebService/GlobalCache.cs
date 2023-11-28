@@ -36,21 +36,21 @@ public class MonitoringClientData : IEnumerable<MonitoringClient>
 
     public string this[string ip]
     {
-        get { return MonitoringClients.SingleOrDefault(x => x.ClientIpAddress == ip)?.ClientApiUrl; }
+        get { return MonitoringClients.SingleOrDefault(x => x.ClientIpAddress == ip)?.ClientId; }
 
         set
         {
             var item = MonitoringClients.SingleOrDefault(x => x.ClientIpAddress == ip);
             if (item == null)
-                MonitoringClients.Add(new MonitoringClient() { ClientIpAddress = ip, ClientApiUrl = value });
+                MonitoringClients.Add(new MonitoringClient() { ClientIpAddress = ip, ClientId = value });
             else
-                item.ClientApiUrl = value;
+                item.ClientId = value;
         }
     }
 
     public void Remove(string ip)
     {
-        var item = MonitoringClients.SingleOrDefault(x => x.ClientApiUrl == ip);
+        var item = MonitoringClients.SingleOrDefault(x => x.ClientIpAddress == ip);
         if (item != null)
         {
             MonitoringClients.Remove(item);
@@ -72,5 +72,5 @@ public class MonitoringClient
 {
     public string ClientIpAddress { get; set; }
 
-    public string ClientApiUrl { get; set; }
+    public string ClientId { get; set; }
 }

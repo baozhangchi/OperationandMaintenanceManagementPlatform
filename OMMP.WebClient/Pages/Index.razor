@@ -1,7 +1,7 @@
 ﻿@page "/"
 
 <PageTitle>Index</PageTitle>
-@if (CurrentClient != null)
+@if (!string.IsNullOrWhiteSpace(ClientId))
 {
     <Row ItemsPerRow="ItemsPerRow.Two" RowType="RowType.Normal">
         <NetworkMonitor AutoRefresh="true"></NetworkMonitor>

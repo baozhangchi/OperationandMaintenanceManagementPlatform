@@ -1,21 +1,21 @@
+using System.Diagnostics.CodeAnalysis;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
+using OMMP.Common;
 using OMMP.Models;
+using OMMP.WebClient.Hubs;
+using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public partial class ApplicationMonitor : IMonitorComponent
+public partial class ApplicationMonitor : IMonitorComponent, IDisposable
 {
+    private Timer _timer;
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
     [Parameter] public bool AutoRefresh { get; set; }
     [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
-
-    private void OnTimerElapsed()
-    {
-        if (AutoRefresh)
-        {
-            LineChart?.Update(ChartAction.AddData);
-        }
-    }
 
     public async Task Reload()
     {
@@ -31,9 +31,11 @@ public partial class ApplicationMonitor : IMonitorComponent
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
-        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
         AutoRefresh = true;
+        _timer = new Timer();
+        _timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+        _timer.Elapsed += (s, e) => { LineChart?.Update(ChartAction.AddData); };
+        _timer.Start();
     }
 
     private async Task<ChartDataSource> InitAsync()
@@ -45,12 +47,16 @@ public partial class ApplicationMonitor : IMonitorComponent
         dataSource.Options.ShowXScales = false;
         dataSource.Options.LegendPosition = ChartLegendPosition.Top;
 
-        var url = MaxMinDateTimeRangeValue != null
-            ? $@"api/AppLog/byTimePeriods/{Application.UUID}/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
+
+        var arg = MaxMinDateTimeRangeValue != default
+            ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)
             : _lastTime.HasValue
-                ? $"api/AppLog/{Application.UUID}/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
-                : $"api/AppLog/{Application.UUID}/1000";
-        var items = await HttpHelper.GetAsync<List<ApplicationLog>>(url);
+                ? new QueryLogArgs(_lastTime.Value)
+                : new QueryLogArgs(1000);
+        var items = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<List<ApplicationLog>>(nameof(IMonitoringClientHub.GetApplicationLogs), Application.UUID,
+                arg, CancellationToken.None);
+
         if (!items.Any())
         {
             return dataSource;
@@ -190,6 +196,15 @@ public partial class ApplicationMonitor : IMonitorComponent
         if (LineChart != null)
         {
             await LineChart.Update(ChartAction.Reload);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_timer != null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
         }
     }
 }

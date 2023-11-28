@@ -1,17 +1,20 @@
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR;
+using OMMP.Common;
 using OMMP.Models;
+using OMMP.WebClient.Hubs;
 using OMMP.WebClient.Shared;
 
 namespace OMMP.WebClient.Pages;
 
 public partial class ApplicationManagement
 {
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+
     [Inject] [NotNull] private DialogService? DialogService { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
 
     [Inject] private NavigationManager Navigation { get; set; }
     public Modal ApplicationDetailModal { get; set; }
@@ -60,8 +63,8 @@ public partial class ApplicationManagement
 
     private async Task<QueryData<ApplicationInfo>> QueryAsync(QueryPageOptions arg)
     {
-        var url = @"/api/app";
-        var data = await HttpHelper.GetAsync<List<ApplicationInfo>>(url);
+        var data = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<List<ApplicationInfo>>(nameof(IMonitoringClientHub.GetApplications), CancellationToken.None);
         return new QueryData<ApplicationInfo>()
         {
             Items = data,
@@ -69,39 +72,20 @@ public partial class ApplicationManagement
         };
     }
 
-    private async Task<bool> SaveAsync()
-    {
-        if (CurrentApplicationValidateForm.Validate())
-        {
-            var result = await HttpHelper.PostAsync<bool>("/api/app", CurrentApplication);
-            if (result)
-            {
-                await ApplicationsView.QueryAsync();
-                return await Task.FromResult(true);
-            }
-        }
-
-        return await Task.FromResult(false);
-    }
-
     private async Task<bool> SaveApplicationAsync(ApplicationInfo application, ItemChangedType changedType)
     {
-        var result = await HttpHelper.PostAsync<bool>("/api/app", application);
-        if (result)
-        {
-            return true;
-        }
-
-        return false;
+        // return await State.SaveApplication(application);
+        return await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<bool>(nameof(IMonitoringClientHub.SaveApplication), application, CancellationToken.None);
     }
 
     private async Task<bool> DeleteApplicationAsync(IEnumerable<ApplicationInfo> applications)
     {
-        var result = await HttpHelper.DeleteAsync<bool>($@"/api/app/{applications.First().UUID}");
-        if (result)
-        {
-            return true;
-        }
+        // var result = await HttpHelper.DeleteAsync<bool>($@"/api/app/{applications.First().UUID}");
+        // if (result)
+        // {
+        //     return true;
+        // }
 
         return false;
     }

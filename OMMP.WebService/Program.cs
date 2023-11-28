@@ -25,6 +25,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<MonitoringHub>("/Monitoring");
-
 app.Run();

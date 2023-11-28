@@ -42,7 +42,7 @@ public class ApplicationResourceMonitoringService : TimeBackgroundService
 
     private static readonly Dictionary<long, int> ApplicationSessionIdCollection = new Dictionary<long, int>();
 
-    protected override async Task ExecuteAsync()
+    protected override async Task ExecuteAsync(DateTime currentTime)
     {
         var client = RepositoryBase.GetClient();
         var applications = await new Repository<ApplicationInfo>(client).GetListAsync();
@@ -97,7 +97,7 @@ public class ApplicationResourceMonitoringService : TimeBackgroundService
                     MemoryUsed = double.Parse(result[1]),
                     IOReadRate = int.Parse(result[2]),
                     IOWriteRate = int.Parse(result[3]),
-                    Time = CurrentTime
+                    Time = currentTime
                 });
             }
         }

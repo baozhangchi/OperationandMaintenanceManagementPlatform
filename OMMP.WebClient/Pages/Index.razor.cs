@@ -1,30 +1,21 @@
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Components;
 
 namespace OMMP.WebClient.Pages;
 
 public partial class Index
 {
-    private MonitoringClient CurrentClient { get; set; }
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
     private bool RefreshDataSignaler { get; set; }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        GlobalCache.Instance.CurrentClientChanged -= OnCurrentClientChanged;
-        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
-        CurrentClient = GlobalCache.Instance.CurrentClient;
-        GlobalCache.Instance.CurrentClientChanged += OnCurrentClientChanged;
-        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
     }
 
     private void OnTimerElapsed()
     {
         RefreshDataSignaler = !RefreshDataSignaler;
-    }
-
-    private void OnCurrentClientChanged(MonitoringClient client)
-    {
-        CurrentClient = client;
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)

@@ -1,17 +1,24 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using OMMP.Common;
 using OMMP.Models;
+using OMMP.WebClient.Hubs;
 using Console = System.Console;
 using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public partial class ProcessesMonitor : IMonitorComponent
+public partial class ProcessesMonitor : IMonitorComponent, IDisposable
 {
     private bool _refreshDataSignaler;
     private DateTime? _lastTime;
+    private Timer _timer;
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
 
     public Chart LineChart { get; set; }
 
@@ -31,12 +38,14 @@ public partial class ProcessesMonitor : IMonitorComponent
         dataSource.Options.ShowXScales = false;
         dataSource.Options.ShowLegend = false;
 
-        var url = MaxMinDateTimeRangeValue != null
-            ? @"api/Processes/byTimePeriods/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
+        var arg = MaxMinDateTimeRangeValue != default
+            ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)
             : _lastTime.HasValue
-                ? $"api/Processes/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
-                : $"api/Processes/1000";
-        var data = await HttpHelper.GetAsync<List<ServerResourceLog>>(url);
+                ? new QueryLogArgs(_lastTime.Value)
+                : new QueryLogArgs(1000);
+        var data = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<List<ServerResourceLog>>(nameof(IMonitoringClientHub.GetServerResourceLogs), arg,
+                CancellationToken.None);
         if (!data.Any()) return dataSource;
 
         dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
@@ -57,9 +66,15 @@ public partial class ProcessesMonitor : IMonitorComponent
 
     protected override void OnInitialized()
     {
+        if (AutoRefresh)
+        {
+            _timer = new Timer();
+            _timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+            _timer.Elapsed += (s, e) => { LineChart?.Update(ChartAction.AddData); };
+            _timer.Start();
+        }
+
         base.OnInitialized();
-        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
-        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
     }
 
     private void OnTimerElapsed()
@@ -75,4 +90,13 @@ public partial class ProcessesMonitor : IMonitorComponent
 
     [Parameter] public bool AutoRefresh { get; set; }
     [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
+
+    public void Dispose()
+    {
+        if (_timer != null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
+        }
+    }
 }

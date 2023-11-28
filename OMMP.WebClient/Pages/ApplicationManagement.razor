@@ -1,6 +1,5 @@
 @page "/applications"
 @using OMMP.Models
-
 <Tab @ref="RootTab" IsLazyLoadTabItem="true" ShowExtendButtons="true" ShowClose="true" OnCloseTabItemAsync="@CloseTabItemAsync">
     <TabItem Text="应用管理" Closable="false">
         <Table @ref="ApplicationsView" TItem="ApplicationInfo" ShowLineNo="true"
@@ -8,8 +7,8 @@
                TableSize="TableSize.Normal" EditDialogShowMaximizeButton="false" EditDialogIsDraggable="true" EditDialogSize="Size.Medium"
                IsStriped="true" IsBordered="true" ShowExtendButtons="true" ShowSkeleton="true" ShowEditButton="false" ShowDeleteButton="false"
                ShowToolbar="true" OnDeleteAsync="DeleteApplicationAsync" AddModalTitle="添加应用" EditModalTitle="修改应用信息"
-               ClickToSelect="true" DoubleClickToEdit="false" OnSaveAsync="SaveApplicationAsync"
-               OnQueryAsync="QueryAsync" OnDoubleClickRowCallback="@OpenApplicationPage">
+               ClickToSelect="true" DoubleClickToEdit="false" OnQueryAsync="@QueryAsync" OnSaveAsync="SaveApplicationAsync"
+               OnDoubleClickRowCallback="@OpenApplicationPage">
             <TableColumns>
                 <TableColumn @bind-Field="@context.Name" Width="180" Text="应用名称"/>
                 <TableColumn @bind-Field="@context.AppFolder" Text="应用所在目录"/>

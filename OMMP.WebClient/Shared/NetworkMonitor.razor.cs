@@ -1,19 +1,26 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Timers;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using OMMP.Common;
 using OMMP.Models;
+using OMMP.WebClient.Hubs;
 using Console = System.Console;
 using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public sealed partial class NetworkMonitor : IMonitorComponent
+public sealed partial class NetworkMonitor : IMonitorComponent, IDisposable
 {
     private bool _refreshDataSignaler;
     private DateTime? _lastTime;
+    private Timer _timer;
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
     public Chart LineChart { get; set; }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
@@ -25,9 +32,15 @@ public sealed partial class NetworkMonitor : IMonitorComponent
 
     protected override void OnInitialized()
     {
+        if (AutoRefresh)
+        {
+            _timer = new Timer();
+            _timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+            _timer.Elapsed += (s, e) => { LineChart?.Update(ChartAction.AddData); };
+            _timer.Start();
+        }
+
         base.OnInitialized();
-        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
-        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
     }
 
     private void OnTimerElapsed()
@@ -47,12 +60,13 @@ public sealed partial class NetworkMonitor : IMonitorComponent
         dataSource.Options.ShowXScales = false;
         dataSource.Options.LegendPosition = ChartLegendPosition.Top;
 
-        var url = MaxMinDateTimeRangeValue != null
-            ? @"api/Network/byTimePeriods/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
+        var arg = MaxMinDateTimeRangeValue != default
+            ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)
             : _lastTime.HasValue
-                ? $"api/Network/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
-                : $"api/Network/1000";
-        var items = await HttpHelper.GetAsync<Dictionary<string, List<NetworkRateLog>>>(url);
+                ? new QueryLogArgs(_lastTime.Value)
+                : new QueryLogArgs(1000);
+        var items = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<Dictionary<string, List<NetworkRateLog>>>(nameof(IMonitoringClientHub.GetNetworkRateLogs), arg, CancellationToken.None);
         if (!items.Any())
         {
             return dataSource;
@@ -110,4 +124,12 @@ public sealed partial class NetworkMonitor : IMonitorComponent
 
     [Parameter] public bool AutoRefresh { get; set; }
     [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
+    public void Dispose()
+    {
+        if (_timer != null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
+        }
+    }
 }

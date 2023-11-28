@@ -1,19 +1,26 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Timers;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using OMMP.Common;
 using OMMP.Models;
+using OMMP.WebClient.Hubs;
 using Console = System.Console;
 using Timer = System.Timers.Timer;
 
 namespace OMMP.WebClient.Shared;
 
-public sealed partial class CpuMonitor : IMonitorComponent
+public sealed partial class CpuMonitor : IMonitorComponent, IDisposable
 {
     private bool _refreshDataSignaler;
     private DateTime? _lastTime;
+    private Timer _timer;
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
     public Chart LineChart { get; set; }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
@@ -25,14 +32,15 @@ public sealed partial class CpuMonitor : IMonitorComponent
 
     protected override void OnInitialized()
     {
-        base.OnInitialized();
-        GlobalCache.Instance.TimerElapsed -= OnTimerElapsed;
-        GlobalCache.Instance.TimerElapsed += OnTimerElapsed;
-    }
+        if (AutoRefresh)
+        {
+            _timer = new Timer();
+            _timer.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+            _timer.Elapsed += (s, e) => { LineChart?.Update(ChartAction.AddData); };
+            _timer.Start();
+        }
 
-    private void OnTimerElapsed()
-    {
-        if (AutoRefresh) LineChart?.Update(ChartAction.AddData);
+        base.OnInitialized();
     }
 
     [Parameter] public DateTimeRangeValue MaxMinDateTimeRangeValue { get; set; }
@@ -45,14 +53,14 @@ public sealed partial class CpuMonitor : IMonitorComponent
         dataSource.Options.Y.Title = "使用率";
         dataSource.Options.ShowXScales = false;
         dataSource.Options.ShowLegend = false;
-        if (string.IsNullOrWhiteSpace(GlobalCache.Instance.CurrentClient.ClientApiUrl)) return dataSource;
 
-        var url = MaxMinDateTimeRangeValue != null
-            ? @"api/Cpu/byTimePeriods/{MaxMinDateTimeRangeValue.Start:yyyy-MM-dd HH:mm:ss}/{MaxMinDateTimeRangeValue.End:yyyy-MM-dd HH:mm:ss}"
+        var arg = MaxMinDateTimeRangeValue != default
+            ? new QueryLogArgs(MaxMinDateTimeRangeValue.Start, MaxMinDateTimeRangeValue.End)
             : _lastTime.HasValue
-                ? $"api/Cpu/{_lastTime.Value:yyyy-MM-dd HH:mm:ss}/1000"
-                : $"api/Cpu/1000";
-        var data = await HttpHelper.GetAsync<List<CpuLog>>(url);
+                ? new QueryLogArgs(_lastTime.Value)
+                : new QueryLogArgs(1000);
+        var data = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<List<CpuLog>>(nameof(IMonitoringClientHub.GetCpuLogs), arg, CancellationToken.None);
         if (!data.Any()) return dataSource;
 
         dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
@@ -80,4 +88,13 @@ public sealed partial class CpuMonitor : IMonitorComponent
     }
 
     [Parameter] public bool AutoRefresh { get; set; }
+
+    public void Dispose()
+    {
+        if (_timer != null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
+        }
+    }
 }

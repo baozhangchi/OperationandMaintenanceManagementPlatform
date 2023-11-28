@@ -1,22 +1,23 @@
 ﻿@inherits LayoutComponentBase
 
 <PageTitle>OMMP.WebClient</PageTitle>
-
-<Layout ShowFooter="true" IsFullSide="true" IsPage="true" ShowCollapseBar="true" IsFixedHeader="true" OnCollapsed="@OnCollapsed" SideWidth="@SideWidth">
-    <Header>
-        <div>
-            <Select IsVirtualize="true" Items="Clients" @bind-Value="SelectedClient"></Select>
-        </div>
-    </Header>
-    <Side>
-        <div style="position: absolute; top: 0; left:0; right: 0; bottom: 0; overflow: auto; border-right: 1px solid rgba(0,0,0,.125); padding: 6px 0;">
-            <NavMenu></NavMenu>
-        </div>
-    </Side>
-    <Main>
-        @if (SelectedClient != null)
-        {
-            @Body
-        }
-    </Main>
-</Layout>
+<CascadingValue TValue="string" IsFixed="false" Value="@ClientId" Name="ClientId">
+    <Layout ShowFooter="true" IsFullSide="true" IsPage="true" ShowCollapseBar="true" IsFixedHeader="true" OnCollapsed="@OnCollapsed" SideWidth="@SideWidth">
+        <Header>
+            <div>
+                <Select IsVirtualize="true" Items="Clients" @bind-Value="SelectedClient"></Select>
+            </div>
+        </Header>
+        <Side>
+            <div style="position: absolute; top: 0; left:0; right: 0; bottom: 0; overflow: auto; border-right: 1px solid rgba(0,0,0,.125); padding: 6px 0;">
+                <NavMenu></NavMenu>
+            </div>
+        </Side>
+        <Main>
+            @if (SelectedClient != null)
+            {
+                @Body
+            }
+        </Main>
+    </Layout>
+</CascadingValue>

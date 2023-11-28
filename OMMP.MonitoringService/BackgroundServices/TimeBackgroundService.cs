@@ -43,13 +43,10 @@ public abstract class TimeBackgroundService : BackgroundService
         if (sender is Timer timer)
         {
             timer.Stop();
-            CurrentTime = DateTime.Parse(DateTime.Now.ToString("s"));
-            await ExecuteAsync();
+            await ExecuteAsync(DateTime.Now);
             timer.Start();
         }
     }
 
-    protected DateTime CurrentTime { get; private set; }
-
-    protected abstract Task ExecuteAsync();
+    protected abstract Task ExecuteAsync(DateTime currentTime);
 }

@@ -1,23 +1,24 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using BootstrapBlazor.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using OMMP.Common;
+using OMMP.WebClient.Hubs;
 using Console = System.Console;
 
 namespace OMMP.WebClient.Shared;
 
 public partial class DrivesMonitor : IMonitorComponent
 {
-    private async Task LoadDrives()
-    {
-        var data = await HttpHelper.GetAsync<List<string>>($"api/Drive/partitions");
-        Drives = data;
-        await InvokeAsync(StateHasChanged);
-    }
+    [CascadingParameter(Name = "ClientId")] private string ClientId { get; set; }
+    [Inject] [NotNull] private IHubContext<MonitoringHub> HubContext { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadDrives();
+        Drives = await HubContext.Clients.Client(ClientId)
+            .InvokeAsync<List<string>>(nameof(IMonitoringClientHub.GetPartitions), CancellationToken.None);
     }
 
     public async Task Reload()

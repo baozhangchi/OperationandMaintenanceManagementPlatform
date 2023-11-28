@@ -1,7 +1,8 @@
 using System.Text;
 using Microsoft.AspNetCore.WebSockets;
 using OMMP.WebClient;
-using OMMP.WebClient.Data;
+using OMMP.WebClient.Hubs;
+using OMMP.WebClient.States;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,8 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddBootstrapBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddSignalR();
+builder.Services.AddSingleton(new GlobalCache());
+builder.Services.AddSingleton<IClientState, ClientState>();
+builder.Services.AddSingleton<IMonitorState, MonitorState>();
+builder.Services.AddSignalR(o => { o.MaximumReceiveMessageSize = 1024 * 1024; });
 
 var app = builder.Build();
 
@@ -28,6 +31,7 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapHub<MonitoringHub>("/Monitoring");
+app.MapHub<ClientHub>("/Client");
 app.MapFallbackToPage("/_Host");
 
 app.Run();

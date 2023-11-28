@@ -164,26 +164,29 @@ public static class BackupRepository
 {
     public static ISqlSugarClient GetClient(DateTime day)
     {
-        var regex = new Regex(@"(?<from>\d{8})-(?<to>]d{8}).db");
-        var dbFiles = new DirectoryInfo(GlobalCache.DataFolder).GetFiles("*.db").OrderByDescending(x => x.CreationTime)
+        var regex = new Regex(@"(?<from>\d{8})-(?<to>\d{8}).db");
+        var dbFiles = new DirectoryInfo(GlobalCache.DataFolder).GetFiles("*.db.bak")
+            .OrderByDescending(x => x.CreationTime).ToList();
+        var dbFileMap = dbFiles
             .Select(x =>
             {
                 var match = regex.Match(x.Name);
-                var from = DateTime.ParseExact(match.Groups["from"].Value, @"yyyyMMdd", CultureInfo.CurrentCulture);
-                var to = DateTime.ParseExact(match.Groups["to"].Value, @"yyyyMMdd", CultureInfo.CurrentCulture);
+                var from = DateTime.ParseExact(match.Groups["from"].Value, @"yyyyMMdd", CultureInfo.InvariantCulture);
+                var to = DateTime.ParseExact(match.Groups["to"].Value, @"yyyyMMdd", CultureInfo.InvariantCulture);
                 return new { File = x, From = from, To = to };
             }).ToList();
-        var dbFile = dbFiles.FirstOrDefault(x => x.From <= day.Date && x.To > day.Date)?.File.FullName;
-        if (string.IsNullOrWhiteSpace(dbFile))
+        var dbFile = dbFileMap.FirstOrDefault(x => x.From <= day.Date && x.To > day.Date)?.File;
+        if (dbFile == null)
         {
-            dbFile = Path.Combine(GlobalCache.DataFolder, $"{day:yyyyMMdd}-{day.AddDays(7):yyyyMMdd}.db");
+            dbFile = new FileInfo(Path.Combine(GlobalCache.DataFolder,
+                $"{day:yyyyMMdd}-{day.AddDays(7):yyyyMMdd}.db.bak"));
         }
 
         var client = new SqlSugarClient(
             new ConnectionConfig()
             {
                 DbType = DbType.Sqlite,
-                ConnectionString = $"DataSource={dbFile}",
+                ConnectionString = $"DataSource={dbFile.FullName}",
                 IsAutoCloseConnection = true,
                 ConfigureExternalServices = RepositoryBase.ExternalServices
             }, db =>
@@ -194,7 +197,7 @@ public static class BackupRepository
                     Console.WriteLine(sql);
                 };
             });
-        client.DbMaintenance.CreateDatabase();
+        var createResult = client.DbMaintenance.CreateDatabase();
         client.CodeFirst.InitTables(typeof(LogTableBase).Assembly.GetTypes()
             .Where(x => !x.IsAbstract && typeof(LogTableBase).IsAssignableFrom(x)).ToArray());
         return client;
@@ -210,5 +213,10 @@ public class BackupRepository<T> : Repository<T> where T : TableBase, new()
     public static BackupRepository<T> CreateInstance(ISqlSugarClient client)
     {
         return new BackupRepository<T>(client);
+    }
+
+    public override async Task<bool> InsertRangeAsync(List<T> insertObjs)
+    {
+        return (await this.Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync()).Count > 0;
     }
 }

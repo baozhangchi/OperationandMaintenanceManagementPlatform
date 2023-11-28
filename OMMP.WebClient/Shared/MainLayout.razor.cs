@@ -1,13 +1,16 @@
 using System.Runtime.CompilerServices;
 using BootstrapBlazor.Components;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace OMMP.WebClient.Shared;
 
 public partial class MainLayout
 {
-    
     private SelectedItem _selectedClient;
-    // private Timer _timer;
+    private HubConnection _hubConnection;
+
+    public string ClientId { get; set; }
 
     public SelectedItem SelectedClient
     {
@@ -16,40 +19,58 @@ public partial class MainLayout
         {
             if (SetField(ref _selectedClient, value))
             {
-                GlobalCache.Instance.CurrentClient = GlobalCache.Instance.MonitoringClients.SingleOrDefault(x => x.ClientIpAddress == value.Text);
-                GlobalCache.Instance.Timer?.Stop();
-                GlobalCache.Instance.Timer?.Start();
+                ClientId = value?.Value;
+                InvokeAsync(StateHasChanged);
             }
         }
     }
 
-    private IEnumerable<SelectedItem> Clients { get; set; }
+    private List<SelectedItem> Clients { get; set; }
 
     public bool RefreshDataSignaler { get; set; }
     public string? SideWidth { get; set; } = @"220px";
+    [Inject] private NavigationManager Navigation { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-        Clients = GlobalCache.Instance.MonitoringClients.Select(x => new SelectedItem(x.ClientApiUrl, x.ClientIpAddress)).ToList();
-        SelectedClient = Clients.FirstOrDefault();
-        GlobalCache.Instance.TimerElapsed -= RefreshClients;
-        GlobalCache.Instance.TimerElapsed += RefreshClients;
-        GlobalCache.Instance.Timer.Start();
+        await base.OnInitializedAsync();
+        var url = Navigation.ToAbsoluteUri("/Client").ToString();
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(url)
+            .Build();
+        _hubConnection.On<Dictionary<string, string>>("ClientsUpdated", UpdateClients);
+        await _hubConnection.StartAsync();
     }
 
-    private void RefreshClients()
+    private async Task UpdateClients(Dictionary<string, string> clientMap)
     {
-        Clients = GlobalCache.Instance.MonitoringClients.Select(x => new SelectedItem(x.ClientApiUrl, x.ClientIpAddress)).ToList();
-        if (!Clients.Contains(SelectedClient))
+        var selectedClientId = SelectedClient?.Text;
+        Clients = clientMap.Select(x => new SelectedItem(x.Value, x.Key)).ToList();
+        SelectedClient = Clients.FirstOrDefault(x => string.Equals(x.Text, selectedClientId)) ?? Clients.FirstOrDefault();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnMonitoringClientDataRemoved(string ipAddress)
+    {
+        var item = Clients.FirstOrDefault(x => x.Text == ipAddress);
+        if (item != null)
         {
+            Clients.Remove(item);
             SelectedClient = Clients.FirstOrDefault();
         }
-        if (SelectedClient != null)
+    }
+
+    private void OnMonitoringClientDataChanged(string ipAddress, string clientId)
+    {
+        var item = Clients.FirstOrDefault(x => x.Text == ipAddress);
+        if (item != null)
         {
-            RefreshDataSignaler = !RefreshDataSignaler;
+            item.Value = clientId;
         }
-        InvokeAsync(StateHasChanged);
+        else
+        {
+            Clients.Add(new SelectedItem(clientId, ipAddress));
+        }
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
