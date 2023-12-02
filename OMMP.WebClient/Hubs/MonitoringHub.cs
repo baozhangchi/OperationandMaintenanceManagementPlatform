@@ -5,14 +5,11 @@ namespace OMMP.WebClient.Hubs;
 
 public class MonitoringHub : Hub
 {
-    // private readonly IServiceProvider _provider;
-    private readonly IClientState _clientState;
-    private readonly IMonitorState _monitorState;
+    private readonly IState _state;
 
     public MonitoringHub(IServiceProvider serviceProvider)
     {
-        _monitorState = serviceProvider.GetRequiredService<IMonitorState>();
-        _clientState = serviceProvider.GetRequiredService<IClientState>();
+        _state = serviceProvider.GetRequiredService<IState>();
     }
 
     public override async Task OnConnectedAsync()
@@ -20,27 +17,27 @@ public class MonitoringHub : Hub
         var clientIpAddress = GetClientIpAddress();
         if (!string.IsNullOrWhiteSpace(clientIpAddress))
         {
-            _monitorState[clientIpAddress] = Context.ConnectionId;
+            _state[clientIpAddress] = Context.ConnectionId;
         }
 
-        if(_clientState.Clients!=null)
+        if(_state.Clients!=null)
         {
-            await _clientState.Clients.All.SendAsync("ClientsUpdated", _monitorState.ToDictionary());
+            await _state.Clients.All.SendAsync("ClientsUpdated", _state.ToDictionary());
         }
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception exception)
     {
         var clientIpAddress = GetClientIpAddress();
         if (!string.IsNullOrWhiteSpace(clientIpAddress))
         {
             Console.WriteLine($"客户端{clientIpAddress}已断开连接");
-            _monitorState.Remove(clientIpAddress);
+            _state.Remove(clientIpAddress);
         }
 
-        if(_clientState.Clients!=null)
+        if(_state.Clients!=null)
         {
-            await _clientState.Clients.All.SendAsync("ClientsUpdated", _monitorState.ToDictionary());
+            await _state.Clients.All.SendAsync("ClientsUpdated", _state.ToDictionary());
         }
     }
 
