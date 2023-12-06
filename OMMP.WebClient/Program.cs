@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddBootstrapBlazor();
+builder.Services.AddTelerikBlazor();
 builder.Services.AddSingleton(new GlobalCache());
 builder.Services.AddSingleton<IClientState, State>();
 builder.Services.AddSingleton<IMonitorState, State>();

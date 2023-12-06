@@ -15,7 +15,7 @@ public class ClientHub : Hub
     public override async Task OnConnectedAsync()
     {
         _state.Clients = Clients;
-        await _state.Clients.Caller.SendAsync("ClientsUpdated", _state.ToDictionary());
+        await _state.Clients.Caller.SendAsync("ClientsUpdated", _state.ToDictionary(x => x.Key, x => x.Value));
     }
 
     public override Task OnDisconnectedAsync(Exception exception)

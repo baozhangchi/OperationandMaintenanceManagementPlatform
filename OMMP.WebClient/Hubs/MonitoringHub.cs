@@ -15,15 +15,10 @@ public class MonitoringHub : Hub
     public override async Task OnConnectedAsync()
     {
         var clientIpAddress = GetClientIpAddress();
-        if (!string.IsNullOrWhiteSpace(clientIpAddress))
-        {
-            _state[clientIpAddress] = Context.ConnectionId;
-        }
+        if (!string.IsNullOrWhiteSpace(clientIpAddress)) _state[clientIpAddress] = Context.ConnectionId;
 
-        if(_state.Clients!=null)
-        {
-            await _state.Clients.All.SendAsync("ClientsUpdated", _state.ToDictionary());
-        }
+        if (_state.Clients != null)
+            await _state.Clients.All.SendAsync("ClientsUpdated", _state.ToDictionary(x => x.Key, x => x.Value));
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
@@ -35,10 +30,8 @@ public class MonitoringHub : Hub
             _state.Remove(clientIpAddress);
         }
 
-        if(_state.Clients!=null)
-        {
-            await _state.Clients.All.SendAsync("ClientsUpdated", _state.ToDictionary());
-        }
+        if (_state.Clients != null)
+            await _state.Clients.All.SendAsync("ClientsUpdated", _state.ToDictionary(x => x.Key, x => x.Value));
     }
 
     private string GetClientIpAddress()

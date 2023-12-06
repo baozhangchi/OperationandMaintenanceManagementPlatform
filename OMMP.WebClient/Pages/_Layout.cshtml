@@ -8,9 +8,13 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <base href="~/"/>
-    @* <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css"/> *@
-    <link href="_content/BootstrapBlazor.FontAwesome/css/font-awesome.min.css" rel="stylesheet">
-    <link href="_content/BootstrapBlazor/css/bootstrap.blazor.bundle.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css"/>
+
+    <link rel="stylesheet" href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/all.css"/>
+    <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/default-ocean-blue.css" rel="stylesheet"/>
+    @* <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-bootstrap/all.css" rel="stylesheet"/> *@
+    @* <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-material/all.css" rel="stylesheet"/> *@
+    @* <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-fluent/all.css" rel="stylesheet"/> *@
     <link href="css/site.css" rel="stylesheet"/>
     <link href="OMMP.WebClient.styles.css" rel="stylesheet"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered"/>
@@ -28,8 +32,8 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
-<script src="_content/BootstrapBlazor/js/bootstrap.blazor.bundle.min.js"></script>
 <script src="_framework/blazor.server.js"></script>
+<script src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js" defer></script>
 <script>
   window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();

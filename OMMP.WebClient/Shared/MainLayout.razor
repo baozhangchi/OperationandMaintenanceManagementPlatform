@@ -1,24 +1,106 @@
-﻿@inherits LayoutComponentBase
+﻿@layout TelerikLayout
+@using OMMP.WebClient.Models
+@inherits LayoutComponentBase
 
 <PageTitle>OMMP.WebClient</PageTitle>
 <CascadingValue TValue="string" IsFixed="false" Value="@ClientId" Name="ClientId">
-    <Layout ShowFooter="true" IsFullSide="true" IsPage="true" ShowCollapseBar="true" IsFixedHeader="true" OnCollapsed="@OnCollapsed" SideWidth="@SideWidth">
-        <Header>
-            <div>
-                <Select IsVirtualize="true" Items="Clients" @bind-Value="SelectedClient"></Select>
-            </div>
-        </Header>
-        <Side>
-            <div style="position: absolute; top: 0; left:0; right: 0; bottom: 0; overflow: auto; border-right: 1px solid rgba(0,0,0,.125); padding: 6px 0;">
-                <NavMenu></NavMenu>
-            </div>
-        </Side>
-        <Main>
-            @if (!string.IsNullOrWhiteSpace(ClientId))
+    
+            <TelerikAppBar PositionMode="Sticky" class="telerik-blazor telerik-blazor k-appbar-static k-appbar k-appbar-primary">
+                <AppBarSection>
+                    <TelerikButton FillMode="flat" Icon="@SvgIcon.Menu" OnClick="@ToggleMenuDrawer"></TelerikButton>
+                </AppBarSection>
+            
+                <AppBarSpacer Size="4px" />
+            
+                <AppBarSection>
+                    <h1 class="title">My Telerik UI for Blazor Account</h1>
+                </AppBarSection>
+            
+                <AppBarSpacer Size="50px" />
+            
+                <AppBarSection>
+                    <span>Release history</span>
+                </AppBarSection>
+            
+                <AppBarSection>
+                    <span>Documentation</span>
+                </AppBarSection>
+            
+                <AppBarSection>
+                    <span>Contact us</span>
+                </AppBarSection>
+            
+                <AppBarSpacer />
+            
+                @* <AppBarSection> *@
+                @*     <TelerikTextBox Value="@SearchValue" Placeholder="Search" ValueChanged="OnTextBoxChanged"></TelerikTextBox> *@
+                @* </AppBarSection> *@
+                @* *@
+                <AppBarSection>
+                    <TelerikSvgIcon Icon="@SvgIcon.Bell"></TelerikSvgIcon>
+                </AppBarSection>
+            
+                <AppBarSeparator />
+            
+                <AppBarSection>
+                    <TelerikSvgIcon Icon="@SvgIcon.Logout"></TelerikSvgIcon>
+                </AppBarSection>
+            
+            </TelerikAppBar>
+    <TelerikDrawer @ref="MenuDrawer"
+                   Expanded="@Expanded"
+                   ExpandedChanged="(bool newValue) => ExpandedChangedHandler(newValue)"
+                   Width="190px" Data="Data" Mode="DrawerMode.Push" Position="DrawerPosition.Start" MiniMode="true">
+        @* <Template> *@
+        @*     <DrawTemplate Data="context"></DrawTemplate> *@
+        @* </Template> *@
+        <ItemTemplate Context="item">
+            <TelerikSvgIcon Icon="item.Icon"></TelerikSvgIcon>
+            @if (Expanded)
             {
-                @Body
+                <div>@item.Text</div>
             }
-        </Main>
-        
-    </Layout>
+        </ItemTemplate>
+        <DrawerContent>
+            @Body
+        </DrawerContent>
+    </TelerikDrawer>
+
+    <TelerikMediaQuery Media="(max-width: 768px)" OnChange="(changed) => WindowWidthSmall = changed"></TelerikMediaQuery>
 </CascadingValue>
+
+@code{
+    TelerikDrawer<DrawerItem> MenuDrawer { get; set; }
+
+    IEnumerable<DrawerItem> Data =>
+        new List<DrawerItem>
+        {
+            new() { Text = "Drawer_Team", Icon = SvgIcon.Grid, Url = "/", Group = "home" },
+            new() { Text = "Drawer_Dashboard", Icon = SvgIcon.ChartLineMarkers, Url = "/sales", Group = "app" },
+            new() { Text = "Drawer_Profile", Icon = SvgIcon.User, Url = "/profile", Group = "app" },
+            new() { Text = "Drawer_Info", Icon = SvgIcon.InfoCircle, Url = "/information", Group = "ext" }
+        };
+
+    public bool Expanded { get; set; }
+    public bool WindowWidthSmall { get; set; }
+    public string? ClientId { get; set; }
+
+    private async Task ToggleMenuDrawer()
+    {
+        if (Expanded)
+        {
+            await MenuDrawer.CollapseAsync();
+        }
+        else
+        {
+            await MenuDrawer.ExpandAsync();
+        }
+    }
+
+    private async Task ExpandedChangedHandler(bool value)
+    {
+        Expanded = value;
+        await Task.CompletedTask;
+    }
+
+}
