@@ -5,24 +5,22 @@ namespace OMMP.WebClient.Hubs;
 
 public class ClientHub : Hub
 {
-    private readonly IClientState _clientState;
-    private readonly IMonitorState _monitorState;
+    private readonly IState _state;
 
     public ClientHub(IServiceProvider serviceProvider)
     {
-        _monitorState = serviceProvider.GetRequiredService<IMonitorState>();
-        _clientState = serviceProvider.GetRequiredService<IClientState>();
+        _state = serviceProvider.GetRequiredService<IState>();
     }
 
     public override async Task OnConnectedAsync()
     {
-        _clientState.Clients = Clients;
-        await _clientState.Clients.Caller.SendAsync("ClientsUpdated", _monitorState.ToDictionary());
+        _state.Clients = Clients;
+        await _state.Clients.Caller.SendAsync("ClientsUpdated", _state.ToDictionary());
     }
 
     public override Task OnDisconnectedAsync(Exception exception)
     {
-        _clientState.Clients = Clients;
+        _state.Clients = Clients;
         return base.OnDisconnectedAsync(exception);
     }
 }
