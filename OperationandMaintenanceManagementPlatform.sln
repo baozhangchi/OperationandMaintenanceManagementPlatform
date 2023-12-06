@@ -1,8 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.MonitoringService", "OMMP.MonitoringService\OMMP.MonitoringService.csproj", "{8003B203-836C-492C-88BD-DFE75AA0316C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.WebService", "OMMP.WebService\OMMP.WebService.csproj", "{BDED35F9-703F-46CC-B549-0C3A3CA8FD81}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.Models", "OMMP.Models\OMMP.Models.csproj", "{B33FDF92-037F-49CC-ACE4-DE476AC7DCAE}"
 EndProject
@@ -10,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.Common", "OMMP.Common\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OMMP.WebClient", "OMMP.WebClient\OMMP.WebClient.csproj", "{CD9C4AE9-08E2-47B1-9B90-9939E73E2F48}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdater", "AutoUpdater\AutoUpdater.csproj", "{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoUpdater", "AutoUpdater\AutoUpdater.csproj", "{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +23,6 @@ Global
 		{8003B203-836C-492C-88BD-DFE75AA0316C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8003B203-836C-492C-88BD-DFE75AA0316C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8003B203-836C-492C-88BD-DFE75AA0316C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BDED35F9-703F-46CC-B549-0C3A3CA8FD81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BDED35F9-703F-46CC-B549-0C3A3CA8FD81}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BDED35F9-703F-46CC-B549-0C3A3CA8FD81}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BDED35F9-703F-46CC-B549-0C3A3CA8FD81}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B33FDF92-037F-49CC-ACE4-DE476AC7DCAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B33FDF92-037F-49CC-ACE4-DE476AC7DCAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B33FDF92-037F-49CC-ACE4-DE476AC7DCAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,5 +39,8 @@ Global
 		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA2A6CD9-0609-4AA0-A878-79D32B44DC23}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

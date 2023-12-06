@@ -5,99 +5,84 @@
 <PageTitle>OMMP.WebClient</PageTitle>
 <CascadingValue TValue="string" IsFixed="false" Value="@ClientId" Name="ClientId">
     
-            <TelerikAppBar PositionMode="Sticky" class="telerik-blazor telerik-blazor k-appbar-static k-appbar k-appbar-primary">
-                <AppBarSection>
-                    <TelerikButton FillMode="flat" Icon="@SvgIcon.Menu" OnClick="@ToggleMenuDrawer"></TelerikButton>
-                </AppBarSection>
-            
-                <AppBarSpacer Size="4px" />
-            
-                <AppBarSection>
-                    <h1 class="title">My Telerik UI for Blazor Account</h1>
-                </AppBarSection>
-            
-                <AppBarSpacer Size="50px" />
-            
-                <AppBarSection>
-                    <span>Release history</span>
-                </AppBarSection>
-            
-                <AppBarSection>
-                    <span>Documentation</span>
-                </AppBarSection>
-            
-                <AppBarSection>
-                    <span>Contact us</span>
-                </AppBarSection>
-            
-                <AppBarSpacer />
-            
-                @* <AppBarSection> *@
-                @*     <TelerikTextBox Value="@SearchValue" Placeholder="Search" ValueChanged="OnTextBoxChanged"></TelerikTextBox> *@
-                @* </AppBarSection> *@
-                @* *@
-                <AppBarSection>
-                    <TelerikSvgIcon Icon="@SvgIcon.Bell"></TelerikSvgIcon>
-                </AppBarSection>
-            
-                <AppBarSeparator />
-            
-                <AppBarSection>
-                    <TelerikSvgIcon Icon="@SvgIcon.Logout"></TelerikSvgIcon>
-                </AppBarSection>
-            
-            </TelerikAppBar>
-    <TelerikDrawer @ref="MenuDrawer"
+    <TelerikAppBar>
+        <AppBarSection>
+            <TelerikButton FillMode="flat" Icon="@SvgIcon.Menu" OnClick="@ToggleDrawerExpanded"></TelerikButton>
+        </AppBarSection>
+
+        <AppBarSpacer Size="4px"/>
+
+        <AppBarSection>
+            <h1 class="title">My Telerik UI for Blazor Account</h1>
+        </AppBarSection>
+
+        <AppBarSpacer Size="50px"/>
+
+        <AppBarSection>
+            <span>Release history</span>
+        </AppBarSection>
+
+        <AppBarSection>
+            <span>Documentation</span>
+        </AppBarSection>
+
+        <AppBarSection>
+            <span>Contact us</span>
+        </AppBarSection>
+
+        <AppBarSpacer/>
+
+        <AppBarSection>
+            <TelerikTextBox Placeholder="Search"></TelerikTextBox>
+        </AppBarSection>
+
+        <AppBarSection>
+            <TelerikSvgIcon Icon="@SvgIcon.Bell"></TelerikSvgIcon>
+        </AppBarSection>
+
+        <AppBarSeparator/>
+
+        <AppBarSection>
+            <TelerikSvgIcon Icon="@SvgIcon.Logout"></TelerikSvgIcon>
+        </AppBarSection>
+
+    </TelerikAppBar>
+    <TelerikDrawer TItem="DrawerItem" @ref="Drawer"
                    Expanded="@Expanded"
-                   ExpandedChanged="(bool newValue) => ExpandedChangedHandler(newValue)"
+                   ExpandedChanged="((bool newValue) => ExpandedChangedHandler(newValue))"
                    Width="190px" Data="Data" Mode="DrawerMode.Push" Position="DrawerPosition.Start" MiniMode="true">
-        @* <Template> *@
-        @*     <DrawTemplate Data="context"></DrawTemplate> *@
-        @* </Template> *@
-        <ItemTemplate Context="item">
-            <TelerikSvgIcon Icon="item.Icon"></TelerikSvgIcon>
-            @if (Expanded)
-            {
-                <div>@item.Text</div>
-            }
-        </ItemTemplate>
         <DrawerContent>
             @Body
         </DrawerContent>
     </TelerikDrawer>
-
-    <TelerikMediaQuery Media="(max-width: 768px)" OnChange="(changed) => WindowWidthSmall = changed"></TelerikMediaQuery>
 </CascadingValue>
 
 @code{
-    TelerikDrawer<DrawerItem> MenuDrawer { get; set; }
-
+    string? ClientId { get; }
+    private bool Expanded { get; set; }
+    TelerikDrawer<DrawerItem> Drawer { get; set; }
     IEnumerable<DrawerItem> Data =>
         new List<DrawerItem>
         {
-            new() { Text = "Drawer_Team", Icon = SvgIcon.Grid, Url = "/", Group = "home" },
-            new() { Text = "Drawer_Dashboard", Icon = SvgIcon.ChartLineMarkers, Url = "/sales", Group = "app" },
-            new() { Text = "Drawer_Profile", Icon = SvgIcon.User, Url = "/profile", Group = "app" },
-            new() { Text = "Drawer_Info", Icon = SvgIcon.InfoCircle, Url = "/information", Group = "ext" }
+            new DrawerItem{ Text = "Drawer_Team", Icon = SvgIcon.Grid, Url="/", Group = "home"},
+            new DrawerItem{ Text = "Drawer_Dashboard", Icon = SvgIcon.ChartLineMarkers, Url="/sales", Group = "app"},
+            new DrawerItem{ Text = "Drawer_Profile", Icon = SvgIcon.User, Url="/profile", Group = "app"},
+            new DrawerItem{ Text = "Drawer_Info", Icon = SvgIcon.InfoCircle, Url="/information", Group = "ext"}
         };
 
-    public bool Expanded { get; set; }
-    public bool WindowWidthSmall { get; set; }
-    public string? ClientId { get; set; }
-
-    private async Task ToggleMenuDrawer()
+    private async Task ToggleDrawerExpanded()
     {
         if (Expanded)
         {
-            await MenuDrawer.CollapseAsync();
+            await Drawer.CollapseAsync();
         }
         else
         {
-            await MenuDrawer.ExpandAsync();
+            await Drawer.ExpandAsync();
         }
     }
 
-    private async Task ExpandedChangedHandler(bool value)
+    async Task ExpandedChangedHandler(bool value)
     {
         Expanded = value;
         await Task.CompletedTask;

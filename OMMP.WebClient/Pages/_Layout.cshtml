@@ -10,11 +10,10 @@
     <base href="~/"/>
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css"/>
 
-    <link rel="stylesheet" href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/all.css"/>
-    <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-default/default-ocean-blue.css" rel="stylesheet"/>
-    @* <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-bootstrap/all.css" rel="stylesheet"/> *@
-    @* <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-material/all.css" rel="stylesheet"/> *@
-    @* <link href="_content/Telerik.UI.for.Blazor/css/kendo-theme-fluent/all.css" rel="stylesheet"/> *@
+    	<link href="@Url.Content("lib/blazor-ui/swatches/bootstrap-main.css")" rel="stylesheet" type="text/css" />
+
+    	<link href="_content/Telerik.UI.for.Blazor.Trial/css/kendo-theme-bootstrap/all.css" rel="stylesheet" type="text/css" />
+
     <link href="css/site.css" rel="stylesheet"/>
     <link href="OMMP.WebClient.styles.css" rel="stylesheet"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered"/>
@@ -33,7 +32,11 @@
     <a class="dismiss">🗙</a>
 </div>
 <script src="_framework/blazor.server.js"></script>
-<script src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js" defer></script>
+	<link href="_content/Telerik.UI.for.Blazor.Trial/css/kendo-font-icons/font-icons.css" />
+
+	<script src="_content/Telerik.UI.for.Blazor.Trial/js/telerik-blazor.js" defer></script>
+
+
 <script>
   window.downloadFileFromStream = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();

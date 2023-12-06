@@ -1,55 +1,55 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <Nullable>disable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\OMMP.Common\OMMP.Common.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Remove="BootstrapBlazor.Analyzers" />
-      <PackageReference Remove="BootstrapBlazor.Analyzers" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
-      <PackageReference Include="Telerik.UI.for.Blazor" Version="4.5.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Remove="Shared\ProcessesMonitor.razor" />
-      <Content Remove="Shared\NetworkMonitor.razor" />
-      <Content Remove="Shared\NavMenu.razor" />
-      <Content Remove="Shared\MonitorPackageManagement.razor" />
-      <Content Remove="Shared\MonitoringServerManagement.razor" />
-      <Content Remove="Shared\MemoryMonitor.razor" />
-      <Content Remove="Shared\DrivesMonitor.razor" />
-      <Content Remove="Shared\DriveMonitor.razor" />
-      <Content Remove="Shared\CpuMonitor.razor" />
-      <Content Remove="Shared\ApplicationMonitor.razor" />
-      <Content Remove="Pages\ApplicationDataView.razor" />
-      <Content Remove="Pages\ApplicationManagement.razor" />
-      <Content Remove="Pages\CpuDataView.razor" />
-      <Content Remove="Pages\MemoryDataView.razor" />
-      <Content Remove="Pages\NetworkDataView.razor" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Shared\ProcessesMonitor.razor.cs" />
-      <Compile Remove="Shared\NetworkMonitor.razor.cs" />
-      <Compile Remove="Shared\NavMenu.razor.cs" />
-      <Compile Remove="Shared\MemoryMonitor.razor.cs" />
-      <Compile Remove="Shared\IMonitorComponent.cs" />
-      <Compile Remove="Shared\DrivesMonitor.razor.cs" />
-      <Compile Remove="Shared\DriveMonitor.razor.cs" />
-      <Compile Remove="Shared\CpuMonitor.razor.cs" />
-      <Compile Remove="Shared\ApplicationMonitor.razor.cs" />
-      <Compile Remove="Pages\ApplicationDataView.razor.cs" />
-      <Compile Remove="Pages\ApplicationManagement.razor.cs" />
-      <Compile Remove="Pages\CpuDataView.razor.cs" />
-      <Compile Remove="Pages\MemoryDataView.razor.cs" />
-      <Compile Remove="Pages\NetworkDataView.razor.cs" />
-    </ItemGroup>
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OMMP.Common\OMMP.Common.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Remove="BootstrapBlazor.Analyzers" />
+    <PackageReference Remove="BootstrapBlazor.Analyzers" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+    <PackageReference Include="Telerik.UI.for.Blazor" Version="4.5.0" />
+    <PackageReference Include="Telerik.UI.for.Blazor.Trial">
+      <Version>5.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Telerik.UI.for.Blazor.Trial">
+      <Version>5.0.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Shared\ProcessesMonitor.razor" />
+    <Content Remove="Shared\NetworkMonitor.razor" />
+    <Content Remove="Shared\NavMenu.razor" />
+    <Content Remove="Shared\MonitorPackageManagement.razor" />
+    <Content Remove="Shared\MonitoringServerManagement.razor" />
+    <Content Remove="Shared\MemoryMonitor.razor" />
+    <Content Remove="Shared\DrivesMonitor.razor" />
+    <Content Remove="Shared\DriveMonitor.razor" />
+    <Content Remove="Shared\CpuMonitor.razor" />
+    <Content Remove="Shared\ApplicationMonitor.razor" />
+    <Content Remove="Pages\ApplicationDataView.razor" />
+    <Content Remove="Pages\ApplicationManagement.razor" />
+    <Content Remove="Pages\CpuDataView.razor" />
+    <Content Remove="Pages\MemoryDataView.razor" />
+    <Content Remove="Pages\NetworkDataView.razor" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Shared\ProcessesMonitor.razor.cs" />
+    <Compile Remove="Shared\NetworkMonitor.razor.cs" />
+    <Compile Remove="Shared\NavMenu.razor.cs" />
+    <Compile Remove="Shared\MemoryMonitor.razor.cs" />
+    <Compile Remove="Shared\IMonitorComponent.cs" />
+    <Compile Remove="Shared\DrivesMonitor.razor.cs" />
+    <Compile Remove="Shared\DriveMonitor.razor.cs" />
+    <Compile Remove="Shared\CpuMonitor.razor.cs" />
+    <Compile Remove="Shared\ApplicationMonitor.razor.cs" />
+    <Compile Remove="Pages\ApplicationDataView.razor.cs" />
+    <Compile Remove="Pages\ApplicationManagement.razor.cs" />
+    <Compile Remove="Pages\CpuDataView.razor.cs" />
+    <Compile Remove="Pages\MemoryDataView.razor.cs" />
+    <Compile Remove="Pages\NetworkDataView.razor.cs" />
+  </ItemGroup>
 </Project>
