@@ -28,9 +28,9 @@ internal class MonitorClientHandler : IMonitorClientHandler
         }
     }
 
-    private async Task Callback<T>(string taskId, T? data)
+    private Task Callback<T>(string taskId, T? data)
     {
-        await Connection!.SendAsync("Callback", taskId, data);
+        return Connection!.SendAsync("Callback", taskId, data);
     }
 
     public async Task GetApplicationAlive(string taskId, long appId)
@@ -95,9 +95,9 @@ internal class MonitorClientHandler : IMonitorClientHandler
         }
     }
 
-    public async Task GetPartitions(string taskId)
+    public Task GetPartitions(string taskId)
     {
-        await Callback(taskId, DriveInfo.GetDrives().Select(drive => drive.Name).ToList());
+        return Callback(taskId, DriveInfo.GetDrives().Select(drive => drive.Name).ToList());
     }
 
     public Task UploadApplication(string taskId, ReadOnlyMemory<byte> buffer)

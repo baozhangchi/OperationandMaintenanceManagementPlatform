@@ -21,11 +21,11 @@
             return dataSource;
         }
 
-        // var arg = StartTime.HasValue && EndTime.HasValue
-        //     ? new QueryLogArgs(StartTime.Value, EndTime.Value)
-        //     : LastTime.HasValue
-        //         ? new QueryLogArgs(LastTime.Value)
-        //         : new QueryLogArgs(1000);
+        var arg = StartTime.HasValue && EndTime.HasValue
+            ? new QueryLogArgs(StartTime.Value, EndTime.Value)
+            : LastTime.HasValue
+                ? new QueryLogArgs(LastTime.Value)
+                : new QueryLogArgs(1000);
         // var data = await ClientProxy
         //     .InvokeAsync<List<CpuLog>>(nameof(IMonitorClientHandler.GetCpuLogs), arg, CancellationToken.None);
         // if (!data.Any()) return dataSource;
@@ -45,22 +45,25 @@
         return dataSource;
     }
 
-    public override async Task ReloadData()
+    public override Task ReloadData()
     {
         if (_chart != null)
         {
             LastTime = null;
-            await _chart.Reload();
-            await InvokeAsync(StateHasChanged);
+            return _chart.Reload();
         }
+
+        return Task.CompletedTask;
     }
 
-    public override async Task RefreshData()
+    public override Task RefreshData()
     {
         if (_chart != null)
         {
-            await _chart.Update(ChartAction.AddData);
+            return _chart.Update(ChartAction.AddData);
         }
+
+        return Task.CompletedTask;
     }
 
 }

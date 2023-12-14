@@ -23,8 +23,11 @@
                     ? new QueryLogArgs(LastTime.Value)
                     : new QueryLogArgs(1000);
             _data = await ServiceUtils.Instance.GetApplicationLogs(ConnectionId, ApplicationId, arg);
-            // _data = await ClientProxy
-            //     .InvokeAsync<List<ApplicationLog>>(nameof(IMonitorClientHandler.GetApplicationLogs), ApplicationId, arg, CancellationToken.None);
+            if (_data != null && _data.Any())
+            {
+                LastTime = _data.Max(x => x.Time);
+            }
+
             await UpdateChart(_cpuChart, _memoryChart, _threadCountChart, _averageResponseTimeChart);
             await InvokeAsync(StateHasChanged);
         }
@@ -48,17 +51,15 @@
 
     public override async Task ReloadData()
     {
-        if (string.IsNullOrEmpty(ConnectionId))
+        if (!string.IsNullOrEmpty(ConnectionId))
         {
-            // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
-            // var arg = StartTime.HasValue && EndTime.HasValue
-            //     ? new QueryLogArgs(StartTime.Value, EndTime.Value)
-            //     : LastTime.HasValue
-            //         ? new QueryLogArgs(LastTime.Value)
-            //         : new QueryLogArgs(1000);
-            // _data = await ClientProxy
-            //     .InvokeAsync<List<ApplicationLog>>(nameof(IMonitorClientHandler.GetApplicationLogs), ApplicationId, arg, CancellationToken.None);
-            if (_data.Any())
+            var arg = StartTime.HasValue && EndTime.HasValue
+                ? new QueryLogArgs(StartTime.Value)
+                : LastTime.HasValue
+                    ? new QueryLogArgs(LastTime.Value)
+                    : new QueryLogArgs(1000);
+            _data = await ServiceUtils.Instance.GetApplicationLogs(ConnectionId, ApplicationId, arg);
+            if (_data != null && _data.Any())
             {
                 LastTime = _data.Max(x => x.Time);
             }
