@@ -28,31 +28,21 @@ public interface IMonitorClientHandler : IClientHandler
 
 public class QueryLogArgs
 {
-    public QueryLogArgs(string taskId)
-    {
-        TaskId = taskId;
-    }
-
-    public QueryLogArgs(int count, string taskId)
+    public QueryLogArgs(int count)
     {
         Count = count;
-        TaskId = taskId;
     }
 
-    public QueryLogArgs(DateTime startTime, string taskId)
+    public QueryLogArgs(DateTime startTime)
     {
         StartTime = startTime;
-        TaskId = taskId;
     }
 
-    public QueryLogArgs(DateTime startTime, DateTime endTime, string taskId)
+    public QueryLogArgs(DateTime startTime, DateTime endTime)
     {
         StartTime = startTime;
         EndTime = endTime;
-        TaskId = taskId;
     }
-
-    public string TaskId { get; }
 
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }

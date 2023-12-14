@@ -1,12 +1,11 @@
 ﻿@page "/app/{ApplicationId:long}"
-@using Microsoft.AspNetCore.SignalR
-@using OAMMP.Common
-@using OAMMP.Models
 @using Timer = System.Timers.Timer
+@using OAMMP.Models
 @using System.Timers
+@using OAMMP.Client.Common
 @inject DialogService DialogService
 <PageTitle>Application</PageTitle>
-@if (string.IsNullOrEmpty(ClientId))
+@if (string.IsNullOrEmpty(ConnectionId))
 {
     <div>未选择服务器</div>
 }
@@ -40,11 +39,10 @@ else
 
 @code {
 
-    [Parameter]
-    public long ApplicationId { get; set; }
+    [Parameter] public long ApplicationId { get; set; }
 
-   [CascadingParameter(Name = "ClientId")]
-	public string? ClientId { get; set; }
+    [CascadingParameter(Name = "ConnectionId")]
+    public string? ConnectionId { get; set; }
 
     private ApplicationItem? _application;
     private Timer? _timer;
@@ -52,12 +50,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (string.IsNullOrEmpty(ClientId))
+        if (!string.IsNullOrEmpty(ConnectionId))
         {
-            // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
-            // _application = await ClientProxy.InvokeAsync<ApplicationItem>(nameof(IMonitorClientHandler.GetApplication), ApplicationId, CancellationToken.None);
+            _appAlive = await ServiceUtils.Instance.GetApplicationAlive(ConnectionId, ApplicationId);
+            _application = await ServiceUtils.Instance.GetApplication(ConnectionId, ApplicationId);
             await InvokeAsync(StateHasChanged);
         }
+
         _timer = new Timer(5 * 1000);
         _timer.Elapsed += Timer_Elapsed;
         _timer.Start();
@@ -69,18 +68,18 @@ else
     {
         if (sender is Timer timer)
         {
-            if (string.IsNullOrEmpty(ClientId))
+            if (!string.IsNullOrEmpty(ConnectionId))
             {
                 timer.Stop();
-                // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
-                // _application = await ClientProxy.InvokeAsync<ApplicationItem>(nameof(IMonitorClientHandler.GetApplication), ApplicationId, CancellationToken.None);
+                _appAlive = await ServiceUtils.Instance.GetApplicationAlive(ConnectionId, ApplicationId);
+                _application = await ServiceUtils.Instance.GetApplication(ConnectionId, ApplicationId);
                 await InvokeAsync(StateHasChanged);
                 timer.Start();
             }
         }
     }
 
-    private async Task UpdateVersion()
+    private Task UpdateVersion()
     {
         var option = new DialogOption
         {
@@ -89,17 +88,17 @@ else
             ShowFooter = false,
             ShowMaximizeButton = false
         };
-        option.Component = BootstrapDynamicComponent.CreateComponent<FileUpload>(new Dictionary<string, object?>()
+        option.Component = BootstrapDynamicComponent.CreateComponent<FileUpload>(new Dictionary<string, object?>
         {
             {
                 nameof(FileUpload.OnConfirmClick), EventCallback.Factory.Create(this, async () =>
                 {
                     await Task.CompletedTask;
-    // await option.CloseDialogAsync();
+                    // await option.CloseDialogAsync();
                 })
             }
         });
-        await DialogService.Show(option);
+        return DialogService.Show(option);
     }
 
 }

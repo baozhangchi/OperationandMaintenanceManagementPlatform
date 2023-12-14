@@ -52,7 +52,7 @@
         dataSource.Options.Title = $"{drive}(Gb)";
         dataSource.Options.ShowXScales = false;
         if (string.IsNullOrWhiteSpace($"{drive}")) return dataSource;
-        if (string.IsNullOrEmpty(ClientId))
+        if (string.IsNullOrEmpty(ConnectionId))
         {
             return dataSource;
         }
@@ -76,7 +76,7 @@
 
     public override async Task ReloadData()
     {
-        UpdateDrives(ClientId);
+        UpdateDrives(ConnectionId);
         if (_charts.Count > 0)
         {
             foreach (var chart in _charts)

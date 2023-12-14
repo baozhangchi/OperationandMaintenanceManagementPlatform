@@ -11,8 +11,8 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 
 	protected DateTime? LastTime;
 
-	[CascadingParameter(Name = "ClientId")]
-	public string? ClientId { get; set; }
+	[CascadingParameter(Name = "ConnectionId")]
+	public string? ConnectionId { get; set; }
 
 	[Parameter] public DateTime? EndTime { get; set; }
 
@@ -27,7 +27,7 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 	{
 		_timer = new Timer(5 * 1000);
 		_timer.Elapsed += Timer_Elapsed;
-		if (string.IsNullOrEmpty(ClientId))
+		if (string.IsNullOrEmpty(ConnectionId))
 		{
 			_timer.Start();
 		}
@@ -46,7 +46,7 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 		{
 			switch (parameter.Name)
 			{
-				case nameof(ClientId):
+				case nameof(ConnectionId):
 					{
 						if (_timer != null)
 						{

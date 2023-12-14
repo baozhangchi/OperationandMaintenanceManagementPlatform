@@ -5,110 +5,110 @@
 @inject NavigationManager Navigation
 <PageTitle>Applications</PageTitle>
 <Table @ref="_applicationDataView" TItem="ApplicationItem" ShowLineNo="true"
-	   TableSize="TableSize.Normal" EditDialogSize="Size.Medium" IsStriped="true" IsBordered="true" ShowExtendButtons="true" ShowSkeleton="true" ShowToolbar="true" AddModalTitle="添加应用" EditModalTitle="修改应用信息" ClickToSelect="true" ShowEditButton="false" ShowDeleteButton="false" DoubleClickToEdit="false" EditDialogShowMaximizeButton="false" EditDialogIsDraggable="true" OnQueryAsync="@QueryAsync" OnSaveAsync="SaveApplicationAsync" OnDoubleClickRowCallback="@OpenApplicationPage">
+       TableSize="TableSize.Normal" EditDialogSize="Size.Medium" IsStriped="true" IsBordered="true" ShowExtendButtons="true" ShowSkeleton="true" ShowToolbar="true" AddModalTitle="添加应用" EditModalTitle="修改应用信息" ClickToSelect="true" ShowEditButton="false" ShowDeleteButton="false" DoubleClickToEdit="false" EditDialogShowMaximizeButton="false" EditDialogIsDraggable="true" OnQueryAsync="@QueryAsync" OnSaveAsync="SaveApplicationAsync" OnDoubleClickRowCallback="@OpenApplicationPage">
 
-	<TableColumns>
-		<TableColumn @bind-Field="@context.Name" />
-		<TableColumn @bind-Field="@context.AppUrl">
-			<Template Context="value">
-				<LinkButton Url="@value.Value" Text="@value.Value" Target="_blank" Color="Color.Link"></LinkButton>
-			</Template>
-		</TableColumn>
-		<TableColumn @bind-Field="@context.AppFolder" />
-		<TableColumn @bind-Field="@context.AppFileName" />
-		<TableColumn @bind-Field="@context.Argument" />
-		<TableColumn @bind-Field="@context.AutoRestart">
-			<Template Context="value">
-				<Checkbox Value="@value.Value" IsDisabled="true"></Checkbox>
-			</Template>
-		</TableColumn>
-		<TableColumn @bind-Field="@context.AutoRestartTimeValue"></TableColumn>
-	</TableColumns>
-	<EditTemplate>
-		<Row ItemsPerRow="ItemsPerRow.One" RowType="RowType.Inline">
-			<BootstrapInput @bind-Value="@context.Name" />
-			<BootstrapInput @bind-Value="@context.AppUrl" />
-			<BootstrapInput @bind-Value="@context.AppFolder" />
-			<BootstrapInput @bind-Value="@context.AppFileName" />
-			<BootstrapInput @bind-Value="@context.Argument" />
-			<Switch @bind-Value="@context.AutoRestart" OnValueChanged="@AutoRestartChanged" />
-			<BootstrapInput TValue="TimeOnly?" @ref="_restartTimeSelector" @bind-Value="@context.AutoRestartTimeValue" IsDisabled="@context.CanSetAutoRestartTime" type="time"></BootstrapInput>
-		</Row>
-	</EditTemplate>
+    <TableColumns>
+        <TableColumn @bind-Field="@context.Name" />
+        <TableColumn @bind-Field="@context.AppUrl">
+            <Template Context="value">
+                <LinkButton Url="@value.Value" Text="@value.Value" Target="_blank" Color="Color.Link"></LinkButton>
+            </Template>
+        </TableColumn>
+        <TableColumn @bind-Field="@context.AppFolder" />
+        <TableColumn @bind-Field="@context.AppFileName" />
+        <TableColumn @bind-Field="@context.Argument" />
+        <TableColumn @bind-Field="@context.AutoRestart">
+            <Template Context="value">
+                <Checkbox Value="@value.Value" IsDisabled="true"></Checkbox>
+            </Template>
+        </TableColumn>
+        <TableColumn @bind-Field="@context.AutoRestartTimeValue"></TableColumn>
+    </TableColumns>
+    <EditTemplate>
+        <Row ItemsPerRow="ItemsPerRow.One" RowType="RowType.Inline">
+            <BootstrapInput @bind-Value="@context.Name" />
+            <BootstrapInput @bind-Value="@context.AppUrl" />
+            <BootstrapInput @bind-Value="@context.AppFolder" />
+            <BootstrapInput @bind-Value="@context.AppFileName" />
+            <BootstrapInput @bind-Value="@context.Argument" />
+            <Switch @bind-Value="@context.AutoRestart" OnValueChanged="@AutoRestartChanged" />
+            <BootstrapInput TValue="TimeOnly?" @ref="_restartTimeSelector" @bind-Value="@context.AutoRestartTimeValue" IsDisabled="@context.CanSetAutoRestartTime" type="time"></BootstrapInput>
+        </Row>
+    </EditTemplate>
 </Table>
 
 @code {
 
-	[CascadingParameter(Name = "ClientId")]
-	public string? ClientId { get; set; }
+    [CascadingParameter(Name = "ConnectionId")]
+    public string? ConnectionId { get; set; }
 
-	public override async Task SetParametersAsync(ParameterView parameters)
-	{
-		await base.SetParametersAsync(parameters);
-		foreach (var parameter in parameters)
-		{
-			switch (parameter.Name)
-			{
-				case nameof(ClientId):
-					{
-						if (_applicationDataView != null)
-						{
-							await _applicationDataView.QueryAsync();
-						}
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        await base.SetParametersAsync(parameters);
+        foreach (var parameter in parameters)
+        {
+            switch (parameter.Name)
+            {
+                case nameof(ConnectionId):
+                    {
+                        if (_applicationDataView != null)
+                        {
+                            await _applicationDataView.QueryAsync();
+                        }
 
-						break;
-					}
-			}
-		}
-	}
+                        break;
+                    }
+            }
+        }
+    }
 
-	private async Task AutoRestartChanged(bool arg)
-	{
-		if (_restartTimeSelector != null)
-		{
-			_restartTimeSelector.SetDisable(!arg);
-			if (_restartTimeSelector.IsDisabled)
-			{
-				_restartTimeSelector.Value = null;
-			}
-		}
+    private async Task AutoRestartChanged(bool arg)
+    {
+        if (_restartTimeSelector != null)
+        {
+            _restartTimeSelector.SetDisable(!arg);
+            if (_restartTimeSelector.IsDisabled)
+            {
+                _restartTimeSelector.Value = null;
+            }
+        }
 
-		await InvokeAsync(StateHasChanged);
-	}
+        await InvokeAsync(StateHasChanged);
+    }
 
-	private async Task<QueryData<ApplicationItem>> QueryAsync(QueryPageOptions arg)
-	{
-		if (string.IsNullOrEmpty(ClientId))
-		{
-			return new QueryData<ApplicationItem>();
-		}
+    private async Task<QueryData<ApplicationItem>> QueryAsync(QueryPageOptions arg)
+    {
+        if (string.IsNullOrEmpty(ConnectionId))
+        {
+            return new QueryData<ApplicationItem>();
+        }
 
-		_applicationItems = await HttpHelper.GetAsync<List<ApplicationItem>>(Navigation.ToAbsoluteUri($"/api/Application/{ClientId}").ToString());
+        _applicationItems = await ServiceUtils.Instance.GetApplications(ConnectionId);
 
-		return new QueryData<ApplicationItem>
-			{
-				Items = _applicationItems,
-				TotalCount = _applicationItems?.Count ?? 0
-			};
-	}
+        return new QueryData<ApplicationItem>
+            {
+                Items = _applicationItems,
+                TotalCount = _applicationItems?.Count ?? 0
+            };
+    }
 
-	private async Task<bool> SaveApplicationAsync(ApplicationItem application, ItemChangedType changedType)
-	{
-		if (string.IsNullOrEmpty(ClientId))
-		{
-			return false;
-		}
+    private async Task<bool> SaveApplicationAsync(ApplicationItem application, ItemChangedType changedType)
+    {
+        if (string.IsNullOrEmpty(ConnectionId))
+        {
+            return false;
+        }
 
-		return await HttpHelper.PostAsync<bool>(Navigation.ToAbsoluteUri($"/api/Application/{ClientId}").ToString(), application);
-	}
+        return await ServiceUtils.Instance.SaveApplication(ConnectionId, application);
+    }
 
-	private Task OpenApplicationPage(ApplicationItem application)
-	{
-		Navigation.NavigateTo($@"/app/{application.UUID}");
-		return Task.CompletedTask;
-	}
+    private Task OpenApplicationPage(ApplicationItem application)
+    {
+        Navigation.NavigateTo($@"/app/{application.UUID}");
+        return Task.CompletedTask;
+    }
 
-	private BootstrapInput<TimeOnly?>? _restartTimeSelector;
-	private Table<ApplicationItem>? _applicationDataView;
-	private List<ApplicationItem>? _applicationItems;
+    private BootstrapInput<TimeOnly?>? _restartTimeSelector;
+    private Table<ApplicationItem>? _applicationDataView;
+    private List<ApplicationItem>? _applicationItems;
 }

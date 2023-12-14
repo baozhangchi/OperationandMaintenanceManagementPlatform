@@ -1,6 +1,6 @@
-﻿@using Microsoft.AspNetCore.SignalR
+﻿@using OAMMP.Models
 @using OAMMP.Common
-@using OAMMP.Models
+@using OAMMP.Client.Common
 @inherits LogViewBase
 <Row ItemsPerRow="ItemsPerRow.Two">
     <Chart @ref="_cpuChart" OnInitAsync="@CpuChartInitAsync"></Chart>
@@ -11,19 +11,18 @@
 
 @code {
 
-    [Parameter]
-    public long ApplicationId { get; set; }
+    [Parameter] public long ApplicationId { get; set; }
 
     public override async Task RefreshData()
     {
-        if (string.IsNullOrEmpty(ClientId))
+        if (!string.IsNullOrEmpty(ConnectionId))
         {
-            // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
-            // var arg = StartTime.HasValue && EndTime.HasValue
-            //     ? new QueryLogArgs(StartTime.Value, EndTime.Value)
-            //     : LastTime.HasValue
-            //         ? new QueryLogArgs(LastTime.Value)
-            //         : new QueryLogArgs(1000);
+            var arg = StartTime.HasValue && EndTime.HasValue
+                ? new QueryLogArgs(StartTime.Value)
+                : LastTime.HasValue
+                    ? new QueryLogArgs(LastTime.Value)
+                    : new QueryLogArgs(1000);
+            _data = await ServiceUtils.Instance.GetApplicationLogs(ConnectionId, ApplicationId, arg);
             // _data = await ClientProxy
             //     .InvokeAsync<List<ApplicationLog>>(nameof(IMonitorClientHandler.GetApplicationLogs), ApplicationId, arg, CancellationToken.None);
             await UpdateChart(_cpuChart, _memoryChart, _threadCountChart, _averageResponseTimeChart);
@@ -49,7 +48,7 @@
 
     public override async Task ReloadData()
     {
-        if (string.IsNullOrEmpty(ClientId))
+        if (string.IsNullOrEmpty(ConnectionId))
         {
             // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
             // var arg = StartTime.HasValue && EndTime.HasValue
@@ -63,6 +62,7 @@
             {
                 LastTime = _data.Max(x => x.Time);
             }
+
             await ReloadChart(_cpuChart, _memoryChart, _threadCountChart, _averageResponseTimeChart);
             await InvokeAsync(StateHasChanged);
         }
@@ -103,7 +103,7 @@
         dataSource.Options.Y.Title = yTitle;
         dataSource.Options.ShowXScales = false;
         dataSource.Options.ShowLegend = false;
-        if (string.IsNullOrEmpty(ClientId))
+        if (string.IsNullOrEmpty(ConnectionId))
         {
             return Task.FromResult(dataSource);
         }
@@ -112,6 +112,7 @@
         {
             return Task.FromResult(dataSource);
         }
+
         dataSource.Labels = _data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
 
         dataSource.Data.Add(new ChartDataset

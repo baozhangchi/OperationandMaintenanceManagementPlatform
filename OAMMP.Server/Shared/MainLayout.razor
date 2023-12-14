@@ -18,7 +18,7 @@
 	<Header>
 		<Stack IsRow="true">
 			<BootstrapLabel Value="选择服务器：" style="margin-top: .5rem; margin-left: .5rem; margin-right: .5rem;"></BootstrapLabel>
-			<Dropdown TValue="string" ShowSplit="false" ShowLabel="true" Items="@_monitors" Value="@ClientId" style="width: 1rem"></Dropdown>
+			<Dropdown TValue="string" ShowSplit="false" ShowLabel="true" Items="@_monitors" Value="@ConnectionId" style="width: 1rem"></Dropdown>
 			@* <Select TValue="string" Items="@_monitors">
 				<DisplayTemplate>
 					<span>@context?.Text</span>
@@ -29,8 +29,8 @@
 	<Side>
 	</Side>
 	<Main>
-		<CascadingValue TValue="string" Value="@ClientId" Name="ClientId">
-			@if (string.IsNullOrEmpty(ClientId))
+		<CascadingValue TValue="string" Value="@ConnectionId" Name="ConnectionId">
+			@if (string.IsNullOrEmpty(ConnectionId))
 			{
 				<div>请先选择一个服务器</div>
 			}
@@ -50,12 +50,13 @@
 
 	private List<MenuItem>? MenuItems { get; set; }
 
-	private string? ClientId { get; set; }
+	private string? ConnectionId { get; set; }
 
 	protected override Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
 		{
+			ServiceUtils.Instance.Init(Navigation.ToAbsoluteUri("/").ToString());
 			ClientHandler.ClientsUpdatedFunc = ClientsUpdated;
 			ClientHandler.OnApplicationsUpdated += OnApplicationsUpdated;
 			Client.Connect(Navigation.ToAbsoluteUri("/Client"));
@@ -111,7 +112,7 @@
 			return;
 		}
 
-		if (applicationItems != null && clientId == ClientId && applicationItems.Any())
+		if (applicationItems != null && clientId == ConnectionId && applicationItems.Any())
 		{
 			MenuItems = items.Union(applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}"))).ToList();
 		}
@@ -130,25 +131,25 @@
 	public async Task ClientsUpdated(List<MonitorServer> monitorServers)
 	{
 		var currentClientIp = string.Empty;
-		if (!string.IsNullOrWhiteSpace(ClientId))
+		if (!string.IsNullOrWhiteSpace(ConnectionId))
 		{
-			currentClientIp = _monitors.Single(x => x.Value == ClientId).Text;
+			currentClientIp = _monitors.Single(x => x.Value == ConnectionId).Text;
 		}
 
 		_monitors = monitorServers.Select(x => new SelectedItem(x.HubClientId!, x.Ip!)).ToList();
 		if (!string.IsNullOrWhiteSpace(currentClientIp) && _monitors.Any(x => x.Text == currentClientIp))
 		{
-			ClientId = _monitors.Single(x => x.Text == currentClientIp).Value;
+			ConnectionId = _monitors.Single(x => x.Text == currentClientIp).Value;
 		}
 		else
 		{
-			ClientId = _monitors.FirstOrDefault()?.Value;
+			ConnectionId = _monitors.FirstOrDefault()?.Value;
 		}
 
-		if (!string.IsNullOrEmpty(ClientId))
+		if (!string.IsNullOrEmpty(ConnectionId))
 		{
-			var applicationItems = await HttpHelper.GetAsync<List<ApplicationItem>>(Navigation.ToAbsoluteUri($"/api/Application/{ClientId}").ToString());
-			OnApplicationsUpdated(ClientId!, applicationItems);
+			var applicationItems = await ServiceUtils.Instance.GetApplications(ConnectionId);
+			OnApplicationsUpdated(ConnectionId!, applicationItems);
 		}
 		else
 		{
