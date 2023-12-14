@@ -1,0 +1,109 @@
+﻿@page "/app/{ApplicationId:long}"
+@using Microsoft.AspNetCore.SignalR
+@using OAMMP.Common
+@using OAMMP.Models
+@using Timer = System.Timers.Timer
+@using System.Timers
+@inject DialogService DialogService
+<PageTitle>Application</PageTitle>
+@if (string.IsNullOrEmpty(ClientId))
+{
+    <div>未选择服务器</div>
+}
+else
+{
+    <h3>
+        @_application?.Name
+        <svg height="30" width="30">
+            @{
+                var color = _appAlive ? "#1ab394" : "#d9d2c2";
+            }
+            <circle cx="15" cy="15" r="10" stroke="black" stroke-width="0" fill="@color"/>
+        </svg>
+    </h3>
+    @if (_application != null)
+    {
+        <Stack IsRow="true">
+            <StackItem>
+                <Button Text="更新版本" OnClick="@UpdateVersion"></Button>
+            </StackItem>
+            <StackItem>
+                <Button Text="备份应用"></Button>
+            </StackItem>
+            <StackItem>
+                <Button Text="日志管理"></Button>
+            </StackItem>
+        </Stack>
+        <ApplicationLogView ApplicationId="@_application.UUID"></ApplicationLogView>
+    }
+}
+
+@code {
+
+    [Parameter]
+    public long ApplicationId { get; set; }
+
+   [CascadingParameter(Name = "ClientId")]
+	public string? ClientId { get; set; }
+
+    private ApplicationItem? _application;
+    private Timer? _timer;
+    private bool _appAlive;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(ClientId))
+        {
+            // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
+            // _application = await ClientProxy.InvokeAsync<ApplicationItem>(nameof(IMonitorClientHandler.GetApplication), ApplicationId, CancellationToken.None);
+            await InvokeAsync(StateHasChanged);
+        }
+        _timer = new Timer(5 * 1000);
+        _timer.Elapsed += Timer_Elapsed;
+        _timer.Start();
+
+        await base.OnInitializedAsync();
+    }
+
+    private async void Timer_Elapsed(object? sender, ElapsedEventArgs e)
+    {
+        if (sender is Timer timer)
+        {
+            if (string.IsNullOrEmpty(ClientId))
+            {
+                timer.Stop();
+                // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
+                // _application = await ClientProxy.InvokeAsync<ApplicationItem>(nameof(IMonitorClientHandler.GetApplication), ApplicationId, CancellationToken.None);
+                await InvokeAsync(StateHasChanged);
+                timer.Start();
+            }
+        }
+    }
+
+    private async Task UpdateVersion()
+    {
+        var option = new DialogOption
+        {
+            Title = "更新版本",
+            Size = Size.Medium,
+            ShowFooter = false,
+            ShowMaximizeButton = false
+        };
+        option.Component = BootstrapDynamicComponent.CreateComponent<FileUpload>(new Dictionary<string, object?>()
+        {
+            {
+                nameof(FileUpload.OnConfirmClick), EventCallback.Factory.Create(this, async () =>
+                {
+                    await Task.CompletedTask;
+    // await option.CloseDialogAsync();
+                })
+            }
+        });
+        await DialogService.Show(option);
+    }
+
+}
+
+<style>
+    .bb_stack_item { margin: 5px }
+</style>

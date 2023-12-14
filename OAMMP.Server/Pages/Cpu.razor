@@ -1,0 +1,47 @@
+﻿@page "/cpu"
+<PageTitle>CPU</PageTitle>
+<Stack IsRow="true">
+    <StackItem>
+        <BootstrapInputGroup>
+            <BootstrapInputGroupLabel DisplayText="时间范围"/>
+            <DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
+        </BootstrapInputGroup>
+    </StackItem>
+</Stack>
+<CpuLogView @ref="_cpuLoginView"></CpuLogView>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_cpuLoginView != null)
+        {
+            await _cpuLoginView.ReloadData();
+        }
+    }
+
+    private CpuLogView? _cpuLoginView;
+
+    private async Task ClearDateTimeRange(DateTimeRangeValue arg)
+    {
+        if (_cpuLoginView != null)
+        {
+            _cpuLoginView.StartTime = null;
+            _cpuLoginView.EndTime = null;
+            await _cpuLoginView.ReloadData();
+            _cpuLoginView.StartAutoRefreshData();
+        }
+    }
+
+    private async Task ConfirmDateTimeRange(DateTimeRangeValue arg)
+    {
+        if (_cpuLoginView != null)
+        {
+            _cpuLoginView.StopAutoRefreshData();
+            _cpuLoginView.StartTime = arg.Start;
+            _cpuLoginView.EndTime = arg.End;
+            await _cpuLoginView.ReloadData();
+        }
+    }
+
+}

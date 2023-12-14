@@ -1,0 +1,160 @@
+@layout TelerikLayout
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.SignalR
+@using OAMMP.Client.Common
+@using OAMMP.Common
+@using OAMMP.Models
+@using OAMMP.Server.Hubs
+@using IClientHandler = OAMMP.Client.Common.IClientHandler
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+@inject SignalRClient<IClientHandler> Client
+@inject IClientHandler ClientHandler
+@inject IHubContext<MonitorHub> HubContext
+
+<PageTitle>OAMMP.Server</PageTitle>
+
+<Layout ShowCollapseBar="true" SideWidth="0" IsPage="true" IsFullSide="true" Menus="@MenuItems" IsFixedHeader="true" IsFixedFooter="true" ShowFooter="true">
+	<Header>
+		<Stack IsRow="true">
+			<BootstrapLabel Value="选择服务器：" style="margin-top: .5rem; margin-left: .5rem; margin-right: .5rem;"></BootstrapLabel>
+			<Dropdown TValue="string" ShowSplit="false" ShowLabel="true" Items="@_monitors" Value="@ClientId" style="width: 1rem"></Dropdown>
+			@* <Select TValue="string" Items="@_monitors">
+				<DisplayTemplate>
+					<span>@context?.Text</span>
+				</DisplayTemplate>
+			</Select> *@
+		</Stack>
+	</Header>
+	<Side>
+	</Side>
+	<Main>
+		<CascadingValue TValue="string" Value="@ClientId" Name="ClientId">
+			@if (string.IsNullOrEmpty(ClientId))
+			{
+				<div>请先选择一个服务器</div>
+			}
+			else
+			{
+				@Body
+			}
+		</CascadingValue>
+	</Main>
+	<Footer>
+		<div>Footer</div>
+	</Footer>
+</Layout>
+
+@code {
+	List<SelectedItem> _monitors = new();
+
+	private List<MenuItem>? MenuItems { get; set; }
+
+	private string? ClientId { get; set; }
+
+	protected override Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			ClientHandler.ClientsUpdatedFunc = ClientsUpdated;
+			ClientHandler.OnApplicationsUpdated += OnApplicationsUpdated;
+			Client.Connect(Navigation.ToAbsoluteUri("/Client"));
+		}
+		return base.OnAfterRenderAsync(firstRender);
+	}
+
+	private void OnApplicationsUpdated(string? clientId, List<ApplicationItem>? applicationItems)
+	{
+		var items = new List<MenuItem>
+		{
+			new()
+			{
+				Text = "首页",
+				Url = "/",
+				Icon = "fa-solid fa-home"
+			},
+			new()
+			{
+				Text = "CPU",
+				Url = "/cpu",
+				Icon = "fa-solid fa-microchip"
+			},
+			new()
+			{
+				Text = "内存",
+				Url = "/memory",
+				Icon = "fa-solid fa-memory"
+			},
+			new()
+			{
+				Text = "网络",
+				Url = "/network",
+				Icon = "fa-solid fa-network-wired"
+			},
+			new()
+			{
+				Text = "磁盘",
+				Url = "/drivers",
+				Icon = "fa-solid fa-hard-drive"
+			},
+			new()
+			{
+				Text = "应用管理",
+				Url = "/apps",
+				Icon = "fa-solid fa-grip"
+			}
+		};
+
+		if (string.IsNullOrWhiteSpace(clientId))
+		{
+			MenuItems = items;
+			return;
+		}
+
+		if (applicationItems != null && clientId == ClientId && applicationItems.Any())
+		{
+			MenuItems = items.Union(applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}"))).ToList();
+		}
+		else
+		{
+			MenuItems = items;
+		}
+	}
+
+
+	public async ValueTask DisposeAsync()
+	{
+		await Task.CompletedTask;
+	}
+
+	public async Task ClientsUpdated(List<MonitorServer> monitorServers)
+	{
+		var currentClientIp = string.Empty;
+		if (!string.IsNullOrWhiteSpace(ClientId))
+		{
+			currentClientIp = _monitors.Single(x => x.Value == ClientId).Text;
+		}
+
+		_monitors = monitorServers.Select(x => new SelectedItem(x.HubClientId!, x.Ip!)).ToList();
+		if (!string.IsNullOrWhiteSpace(currentClientIp) && _monitors.Any(x => x.Text == currentClientIp))
+		{
+			ClientId = _monitors.Single(x => x.Text == currentClientIp).Value;
+		}
+		else
+		{
+			ClientId = _monitors.FirstOrDefault()?.Value;
+		}
+
+		if (!string.IsNullOrEmpty(ClientId))
+		{
+			var applicationItems = await HttpHelper.GetAsync<List<ApplicationItem>>(Navigation.ToAbsoluteUri($"/api/Application/{ClientId}").ToString());
+			OnApplicationsUpdated(ClientId!, applicationItems);
+		}
+		else
+		{
+			OnApplicationsUpdated(string.Empty, default);
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+
+}

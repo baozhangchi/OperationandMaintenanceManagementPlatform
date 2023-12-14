@@ -1,0 +1,130 @@
+﻿@using Microsoft.AspNetCore.SignalR
+@using OAMMP.Common
+@using OAMMP.Models
+@inherits LogViewBase
+<Row ItemsPerRow="ItemsPerRow.Two">
+    <Chart @ref="_cpuChart" OnInitAsync="@CpuChartInitAsync"></Chart>
+    <Chart @ref="_memoryChart" OnInitAsync="@MemoryChartInitAsync"></Chart>
+    <Chart @ref="_threadCountChart" OnInitAsync="@ThreadCountChartInitAsync"/>
+    <Chart @ref="_averageResponseTimeChart" OnInitAsync="@AverageResponseTimeChartInitAsync"></Chart>
+</Row>
+
+@code {
+
+    [Parameter]
+    public long ApplicationId { get; set; }
+
+    public override async Task RefreshData()
+    {
+        if (string.IsNullOrEmpty(ClientId))
+        {
+            // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
+            // var arg = StartTime.HasValue && EndTime.HasValue
+            //     ? new QueryLogArgs(StartTime.Value, EndTime.Value)
+            //     : LastTime.HasValue
+            //         ? new QueryLogArgs(LastTime.Value)
+            //         : new QueryLogArgs(1000);
+            // _data = await ClientProxy
+            //     .InvokeAsync<List<ApplicationLog>>(nameof(IMonitorClientHandler.GetApplicationLogs), ApplicationId, arg, CancellationToken.None);
+            await UpdateChart(_cpuChart, _memoryChart, _threadCountChart, _averageResponseTimeChart);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ReloadChart(params Chart?[] charts)
+    {
+        foreach (var chart in charts)
+        {
+            if (chart != null) await chart.Reload();
+        }
+    }
+
+    private async Task UpdateChart(params Chart?[] charts)
+    {
+        foreach (var chart in charts)
+        {
+            if (chart != null) await chart.Update(ChartAction.AddData);
+        }
+    }
+
+    public override async Task ReloadData()
+    {
+        if (string.IsNullOrEmpty(ClientId))
+        {
+            // _appAlive = await ClientProxy.InvokeAsync<bool>(nameof(IMonitorClientHandler.GetApplicationAlive), ApplicationId, CancellationToken.None);
+            // var arg = StartTime.HasValue && EndTime.HasValue
+            //     ? new QueryLogArgs(StartTime.Value, EndTime.Value)
+            //     : LastTime.HasValue
+            //         ? new QueryLogArgs(LastTime.Value)
+            //         : new QueryLogArgs(1000);
+            // _data = await ClientProxy
+            //     .InvokeAsync<List<ApplicationLog>>(nameof(IMonitorClientHandler.GetApplicationLogs), ApplicationId, arg, CancellationToken.None);
+            if (_data.Any())
+            {
+                LastTime = _data.Max(x => x.Time);
+            }
+            await ReloadChart(_cpuChart, _memoryChart, _threadCountChart, _averageResponseTimeChart);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private bool _appAlive;
+    private List<ApplicationLog>? _data;
+    private Chart? _cpuChart;
+    private Chart? _memoryChart;
+    private Chart? _threadCountChart;
+    private Chart? _averageResponseTimeChart;
+
+    private Task<ChartDataSource> CpuChartInitAsync()
+    {
+        return InitAsync(x => x.CpuUsage * 100, "CPU监控", "使用率(%)", "CPU");
+    }
+
+    private Task<ChartDataSource> MemoryChartInitAsync()
+    {
+        return InitAsync(x => x.MemoryUsage / 1024 / 1024, "Memory监控", "使用量(Mb)", "Memory");
+    }
+
+    private Task<ChartDataSource> ThreadCountChartInitAsync()
+    {
+        return InitAsync(x => x.ThreadCount, "线程数监控", "数量", "线程数");
+    }
+
+    private Task<ChartDataSource> AverageResponseTimeChartInitAsync()
+    {
+        return InitAsync(x => x.AverageResponseTime, "平均响应时间", "秒(s)", "响应时间");
+    }
+
+    private Task<ChartDataSource> InitAsync(Func<ApplicationLog, object> selector, string title, string yTitle, string label)
+    {
+        var dataSource = new ChartDataSource();
+        dataSource.Options.Title = title;
+        dataSource.Options.X.Title = "时间";
+        dataSource.Options.Y.Title = yTitle;
+        dataSource.Options.ShowXScales = false;
+        dataSource.Options.ShowLegend = false;
+        if (string.IsNullOrEmpty(ClientId))
+        {
+            return Task.FromResult(dataSource);
+        }
+
+        if (_data == null || !_data.Any())
+        {
+            return Task.FromResult(dataSource);
+        }
+        dataSource.Labels = _data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
+
+        dataSource.Data.Add(new ChartDataset
+        {
+            ShowPointStyle = false,
+            PointRadius = 1,
+            PointStyle = ChartPointStyle.Circle,
+            Tension = 0,
+            BorderWidth = 1,
+            Label = label,
+            Data = _data.Select(selector)
+        });
+        return Task.FromResult(dataSource);
+    }
+
+}

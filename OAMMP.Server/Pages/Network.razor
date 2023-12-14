@@ -1,0 +1,47 @@
+﻿@page "/network"
+
+<PageTitle>Network</PageTitle>
+<Stack IsRow="true">
+    <StackItem>
+        <BootstrapInputGroup>
+            <BootstrapInputGroupLabel DisplayText="时间范围"/>
+            <DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
+        </BootstrapInputGroup>
+    </StackItem>
+</Stack>
+<NetworkLogView @ref="_networkLogView"></NetworkLogView>
+
+@code {
+
+    private NetworkLogView? _networkLogView;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_networkLogView != null)
+        {
+            await _networkLogView.ReloadData();
+        }
+    }
+
+    private async Task ClearDateTimeRange(DateTimeRangeValue arg)
+    {
+        if (_networkLogView != null)
+        {
+            _networkLogView.StartTime = null;
+            _networkLogView.EndTime = null;
+            await _networkLogView.ReloadData();
+            _networkLogView.StartAutoRefreshData();
+        }
+    }
+
+    private async Task ConfirmDateTimeRange(DateTimeRangeValue arg)
+    {
+        if (_networkLogView != null)
+        {
+            _networkLogView.StopAutoRefreshData();
+            _networkLogView.StartTime = arg.Start;
+            _networkLogView.EndTime = arg.End;
+            await _networkLogView.ReloadData();
+        }
+    }
+}

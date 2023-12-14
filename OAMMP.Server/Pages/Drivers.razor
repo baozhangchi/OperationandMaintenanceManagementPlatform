@@ -1,0 +1,16 @@
+﻿@page "/drivers"
+<PageTitle>Drivers</PageTitle>
+<DriversLogView @ref="_driversLogView"></DriversLogView>
+
+@code {
+
+    private DriversLogView? _driversLogView;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_driversLogView != null)
+        {
+            await _driversLogView.ReloadData();
+        }
+    }
+}

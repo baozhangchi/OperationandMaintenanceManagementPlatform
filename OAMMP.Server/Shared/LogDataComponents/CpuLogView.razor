@@ -1,0 +1,66 @@
+﻿@using Microsoft.AspNetCore.SignalR
+@using OAMMP.Common
+@using OAMMP.Models
+@inherits LogViewBase
+
+<Chart @ref="_chart" ChartType="ChartType.Line" ChartAction="ChartAction.Reload" OnInitAsync="@InitAsync"></Chart>
+
+@code {
+    Chart? _chart;
+
+    private async Task<ChartDataSource> InitAsync()
+    {
+        var dataSource = new ChartDataSource();
+        dataSource.Options.Title = "CPU监控";
+        dataSource.Options.X.Title = "时间";
+        dataSource.Options.Y.Title = "使用率(%)";
+        dataSource.Options.ShowXScales = false;
+        dataSource.Options.ShowLegend = false;
+        if (string.IsNullOrEmpty(ClientId))
+        {
+            return dataSource;
+        }
+
+        // var arg = StartTime.HasValue && EndTime.HasValue
+        //     ? new QueryLogArgs(StartTime.Value, EndTime.Value)
+        //     : LastTime.HasValue
+        //         ? new QueryLogArgs(LastTime.Value)
+        //         : new QueryLogArgs(1000);
+        // var data = await ClientProxy
+        //     .InvokeAsync<List<CpuLog>>(nameof(IMonitorClientHandler.GetCpuLogs), arg, CancellationToken.None);
+        // if (!data.Any()) return dataSource;
+        // dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
+        // LastTime = data.Max(x => x.Time);
+
+        // dataSource.Data.Add(new ChartDataset
+        // {
+        //     ShowPointStyle = false,
+        //     PointRadius = 1,
+        //     PointStyle = ChartPointStyle.Circle,
+        //     Tension = 0,
+        //     BorderWidth = 1,
+        //     Label = "CPU",
+        //     Data = data.Select(x => (object)(x.Used * 100))
+        // });
+        return dataSource;
+    }
+
+    public override async Task ReloadData()
+    {
+        if (_chart != null)
+        {
+            LastTime = null;
+            await _chart.Reload();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public override async Task RefreshData()
+    {
+        if (_chart != null)
+        {
+            await _chart.Update(ChartAction.AddData);
+        }
+    }
+
+}

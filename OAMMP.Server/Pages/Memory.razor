@@ -1,0 +1,46 @@
+﻿@page "/memory"
+<PageTitle>Memory</PageTitle>
+<Stack IsRow="true">
+    <StackItem>
+        <BootstrapInputGroup>
+            <BootstrapInputGroupLabel DisplayText="时间范围"/>
+            <DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
+        </BootstrapInputGroup>
+    </StackItem>
+</Stack>
+<MemoryLogView @ref="_memoryLogView"></MemoryLogView>
+
+@code {
+    private MemoryLogView? _memoryLogView;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_memoryLogView != null)
+        {
+            await _memoryLogView.ReloadData();
+        }
+    }
+
+    private async Task ClearDateTimeRange(DateTimeRangeValue arg)
+    {
+        if (_memoryLogView != null)
+        {
+            _memoryLogView.StartTime = null;
+            _memoryLogView.EndTime = null;
+            await _memoryLogView.ReloadData();
+            _memoryLogView.StartAutoRefreshData();
+        }
+    }
+
+    private async Task ConfirmDateTimeRange(DateTimeRangeValue arg)
+    {
+        if (_memoryLogView != null)
+        {
+            _memoryLogView.StopAutoRefreshData();
+            _memoryLogView.StartTime = arg.Start;
+            _memoryLogView.EndTime = arg.End;
+            await _memoryLogView.ReloadData();
+        }
+    }
+
+}

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OAMMP.Monitor": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
