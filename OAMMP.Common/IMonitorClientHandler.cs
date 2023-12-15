@@ -18,8 +18,8 @@ public interface IMonitorClientHandler : IClientHandler
 	Task GetCpuLogs(string taskId, QueryLogArgs args);
 	Task GetNetworkCards(string taskId);
 	Task GetMemoryLogs(string taskId, QueryLogArgs args);
-	Task GetNetworkLogs(string taskId, QueryLogArgs args);
-	//Task GetNetworkLogs(string taskId, string mac, QueryLogArgs args);
+	//Task GetNetworkLogs(string taskId, QueryLogArgs args);
+	Task GetNetworkLogs(string taskId, string mac, QueryLogArgs args);
 	Task GetServerResourceLogs(string taskId, QueryLogArgs args);
 	Task GetPartitionLog(string taskId, string drive);
 	Task GetPartitions(string taskId);

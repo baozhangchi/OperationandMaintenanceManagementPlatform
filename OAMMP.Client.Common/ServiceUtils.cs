@@ -69,15 +69,15 @@ public class ServiceUtils
 		return Send<List<MemoryLog>>($"/api/Resources/memory/{connectionId}", args, HttpMethod.Post);
 	}
 
-	public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, QueryLogArgs args)
-	{
-		return Send<List<NetworkLog>>($"/api/Resources/net/{connectionId}", args, HttpMethod.Post);
-	}
-
-	//public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, string mac, QueryLogArgs args)
+	//public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, QueryLogArgs args)
 	//{
-	//	return Send<List<NetworkLog>>($"/api/Resources/net/{connectionId}/{mac}", args, HttpMethod.Post);
+	//	return Send<List<NetworkLog>>($"/api/Resources/net/{connectionId}", args, HttpMethod.Post);
 	//}
+
+	public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, string mac, QueryLogArgs args)
+	{
+		return Send<List<NetworkLog>>($"/api/Resources/net/{connectionId}/{mac}", args, HttpMethod.Post);
+	}
 
 	public Task<List<ServerResourceLog>?> GetServerResourceLogs(string connectionId, QueryLogArgs args)
 	{

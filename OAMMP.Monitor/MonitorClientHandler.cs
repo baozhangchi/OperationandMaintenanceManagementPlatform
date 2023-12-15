@@ -132,56 +132,56 @@ internal class MonitorClientHandler : IMonitorClientHandler
         }
     }
 
-    public async Task GetNetworkLogs(string taskId, QueryLogArgs args)
-    {
-        using (var repository =
-               _serviceProvider.CreateAsyncScope().ServiceProvider.GetRequiredService<LogRepository<NetworkLog>>())
-        {
-            var data = new List<NetworkLog>();
-            foreach (var networkInfo in NetworkInfo.GetNetworkInfos())
-            {
-                var mac = networkInfo.Mac;
-                var expression = new Expressionable<NetworkLog>();
-                expression.And(x => x.Mac == mac);
-                expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
-                expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
-                if (args.Count.HasValue)
-                {
-                    var items = await repository.GetLatestListAsync(expression.ToExpression(), args.Count.Value);
-                    data.AddRange(items);
-                }
-                else
-                {
-                    var items = await repository.GetLatestListAsync(expression.ToExpression());
-                    data.AddRange(items);
-                }
-            }
-
-            await Callback(taskId, data);
-        }
-    }
-
-    //public async Task GetNetworkLogs(string taskId, string mac, QueryLogArgs args)
+    //public async Task GetNetworkLogs(string taskId, QueryLogArgs args)
     //{
     //    using (var repository =
     //           _serviceProvider.CreateAsyncScope().ServiceProvider.GetRequiredService<LogRepository<NetworkLog>>())
     //    {
-    //        var expression = new Expressionable<NetworkLog>();
-    //        expression.And(x => x.Mac == mac);
-    //        expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
-    //        expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
-    //        if (args.Count.HasValue)
+    //        var data = new List<NetworkLog>();
+    //        foreach (var networkInfo in NetworkInfo.GetNetworkInfos())
     //        {
-    //            var items = await repository.GetLatestListAsync(expression.ToExpression(), args.Count.Value);
-    //            await Callback(taskId, items);
+    //            var mac = networkInfo.Mac;
+    //            var expression = new Expressionable<NetworkLog>();
+    //            expression.And(x => x.Mac == mac);
+    //            expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
+    //            expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
+    //            if (args.Count.HasValue)
+    //            {
+    //                var items = await repository.GetLatestListAsync(expression.ToExpression(), args.Count.Value);
+    //                data.AddRange(items);
+    //            }
+    //            else
+    //            {
+    //                var items = await repository.GetLatestListAsync(expression.ToExpression());
+    //                data.AddRange(items);
+    //            }
     //        }
-    //        else
-    //        {
-    //            var items = await repository.GetLatestListAsync(expression.ToExpression());
-    //            await Callback(taskId, items);
-    //        }
+
+    //        await Callback(taskId, data);
     //    }
     //}
+
+    public async Task GetNetworkLogs(string taskId, string mac, QueryLogArgs args)
+    {
+        using (var repository =
+               _serviceProvider.CreateAsyncScope().ServiceProvider.GetRequiredService<LogRepository<NetworkLog>>())
+        {
+            var expression = new Expressionable<NetworkLog>();
+            expression.And(x => x.Mac == mac);
+            expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
+            expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
+            if (args.Count.HasValue)
+            {
+                var items = await repository.GetLatestListAsync(expression.ToExpression(), args.Count.Value);
+                await Callback(taskId, items);
+            }
+            else
+            {
+                var items = await repository.GetLatestListAsync(expression.ToExpression());
+                await Callback(taskId, items);
+            }
+        }
+    }
 
 
     private async Task<List<T>> GetLogData<T>(QueryLogArgs args, Expression<Func<T, bool>>? exp = null)

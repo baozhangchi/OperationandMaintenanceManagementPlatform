@@ -32,17 +32,17 @@ public class ResourcesController : ControllerBase
 		return _state.InvokeAsync<List<MemoryLog>>(connectionId, nameof(IMonitorClientHandler.GetMemoryLogs), args);
 	}
 
-	[HttpPost("net/{connectionId}")]
-	public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, [FromBody] QueryLogArgs args)
-	{
-		return _state.InvokeAsync<List<NetworkLog>>(connectionId, nameof(IMonitorClientHandler.GetNetworkLogs), args);
-	}
-
-	//[HttpPost("net/{connectionId}/{mac}")]
-	//public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, string mac, [FromBody] QueryLogArgs args)
+	//[HttpPost("net/{connectionId}")]
+	//public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, [FromBody] QueryLogArgs args)
 	//{
-	//	return _state.InvokeAsync<List<NetworkLog>>(connectionId, nameof(IMonitorClientHandler.GetNetworkLogs), mac, args);
+	//	return _state.InvokeAsync<List<NetworkLog>>(connectionId, nameof(IMonitorClientHandler.GetNetworkLogs), args);
 	//}
+
+	[HttpPost("net/{connectionId}/{mac}")]
+	public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, string mac, [FromBody] QueryLogArgs args)
+	{
+		return _state.InvokeAsync<List<NetworkLog>>(connectionId, nameof(IMonitorClientHandler.GetNetworkLogs), mac, args);
+	}
 
 	[HttpGet("net/{connectionId}")]
 	public Task<Dictionary<string,string>?> GetNetworkCards(string connectionId)
