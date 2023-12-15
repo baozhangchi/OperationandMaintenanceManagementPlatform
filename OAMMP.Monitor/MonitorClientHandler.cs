@@ -68,12 +68,18 @@ internal class MonitorClientHandler : IMonitorClientHandler
                    .GetRequiredService<Repository<ApplicationItem>>())
         {
             await Callback(taskId, await repository.InsertOrUpdateAsync(application));
+            await Connection!.SendAsync("ApplicationsUpdated", await repository.GetListAsync());
         }
     }
 
     public async Task GetCpuLogs(string taskId, QueryLogArgs args)
     {
         await Callback(taskId, await GetLogData<CpuLog>(args));
+    }
+
+    public async Task GetNetworkCards(string taskId)
+    {
+        await Callback(taskId, NetworkInfo.GetNetworkInfos().Where(x => x.IsSupportIpv4 && !string.IsNullOrWhiteSpace(x.Mac) && x.Status == System.Net.NetworkInformation.OperationalStatus.Up).ToDictionary(x => x.Mac, x => x.Name));
     }
 
     public async Task GetMemoryLogs(string taskId, QueryLogArgs args)
@@ -115,6 +121,17 @@ internal class MonitorClientHandler : IMonitorClientHandler
         throw new NotImplementedException();
     }
 
+    public async Task DeleteApplications(string taskId, List<long> applicationIds)
+    {
+        using (var repository =
+               _serviceProvider.CreateAsyncScope().ServiceProvider.GetRequiredService<Repository<ApplicationItem>>())
+        {
+            var items = await repository.GetListAsync(x => applicationIds.Contains(x.UUID));
+            await Callback(taskId, await repository.DeleteAsync(items));
+            await Connection!.SendAsync("ApplicationsUpdated", await repository.GetListAsync());
+        }
+    }
+
     public async Task GetNetworkLogs(string taskId, QueryLogArgs args)
     {
         using (var repository =
@@ -123,9 +140,9 @@ internal class MonitorClientHandler : IMonitorClientHandler
             var data = new List<NetworkLog>();
             foreach (var networkInfo in NetworkInfo.GetNetworkInfos())
             {
-                var networkName = networkInfo.Name;
+                var mac = networkInfo.Mac;
                 var expression = new Expressionable<NetworkLog>();
-                expression.And(x => x.NetworkCardName == networkName);
+                expression.And(x => x.Mac == mac);
                 expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
                 expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
                 if (args.Count.HasValue)
@@ -143,6 +160,28 @@ internal class MonitorClientHandler : IMonitorClientHandler
             await Callback(taskId, data);
         }
     }
+
+    //public async Task GetNetworkLogs(string taskId, string mac, QueryLogArgs args)
+    //{
+    //    using (var repository =
+    //           _serviceProvider.CreateAsyncScope().ServiceProvider.GetRequiredService<LogRepository<NetworkLog>>())
+    //    {
+    //        var expression = new Expressionable<NetworkLog>();
+    //        expression.And(x => x.Mac == mac);
+    //        expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
+    //        expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
+    //        if (args.Count.HasValue)
+    //        {
+    //            var items = await repository.GetLatestListAsync(expression.ToExpression(), args.Count.Value);
+    //            await Callback(taskId, items);
+    //        }
+    //        else
+    //        {
+    //            var items = await repository.GetLatestListAsync(expression.ToExpression());
+    //            await Callback(taskId, items);
+    //        }
+    //    }
+    //}
 
 
     private async Task<List<T>> GetLogData<T>(QueryLogArgs args, Expression<Func<T, bool>>? exp = null)

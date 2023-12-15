@@ -1,6 +1,5 @@
 ﻿using System.Timers;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR;
 using Timer = System.Timers.Timer;
 
 namespace OAMMP.Server.Shared.LogDataComponents;
@@ -27,9 +26,10 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 	{
 		_timer = new Timer(5 * 1000);
 		_timer.Elapsed += Timer_Elapsed;
-		if (string.IsNullOrEmpty(ConnectionId))
+		if (!string.IsNullOrEmpty(ConnectionId))
 		{
-			_timer.Start();
+			ReloadData();
+			StartAutoRefreshData();
 		}
 
 		return base.OnInitializedAsync();
@@ -44,16 +44,29 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 		await base.SetParametersAsync(parameters);
 		foreach (var parameter in parameters)
 		{
+			var value = parameter.Value;
 			switch (parameter.Name)
 			{
 				case nameof(ConnectionId):
 					{
 						if (_timer != null)
 						{
+							_timer.Stop();
 							StartTime = null;
 							EndTime = null;
 							LastTime = null;
 							await ReloadData();
+							if(!string.IsNullOrWhiteSpace((string)value))
+							{
+								try
+								{
+									_timer.Start();
+								}
+								catch (ObjectDisposedException e)
+								{
+									
+								}
+							}
 						}
 
 						break;
@@ -65,6 +78,7 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 	public void StartAutoRefreshData()
 	{
 		_timer?.Stop();
+		_timer?.Start();
 	}
 
 	public void StopAutoRefreshData()

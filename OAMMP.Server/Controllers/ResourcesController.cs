@@ -13,46 +13,58 @@ namespace OAMMP.Server.Controllers;
 [ApiController]
 public class ResourcesController : ControllerBase
 {
-    private readonly IMonitorState _state;
+	private readonly IMonitorState _state;
 
-    public ResourcesController(IMonitorState state)
-    {
-        _state = state;
-    }
+	public ResourcesController(IMonitorState state)
+	{
+		_state = state;
+	}
 
-    [HttpPost("cpu/{clientId}")]
-    public Task<List<CpuLog>?> GetCpuLogs(string clientId, [FromBody] QueryLogArgs args)
-    {
-        return _state.InvokeAsync<List<CpuLog>>(clientId, nameof(IMonitorClientHandler.GetCpuLogs), args);
-    }
+	[HttpPost("cpu/{connectionId}")]
+	public Task<List<CpuLog>?> GetCpuLogs(string connectionId, [FromBody] QueryLogArgs args)
+	{
+		return _state.InvokeAsync<List<CpuLog>>(connectionId, nameof(IMonitorClientHandler.GetCpuLogs), args);
+	}
 
-    [HttpPost("memory/{clientId}")]
-    public Task<List<MemoryLog>?> GetMemoryLogs(string clientId, [FromBody] QueryLogArgs args)
-    {
-        return _state.InvokeAsync<List<MemoryLog>>(clientId, nameof(IMonitorClientHandler.GetMemoryLogs), args);
-    }
+	[HttpPost("memory/{connectionId}")]
+	public Task<List<MemoryLog>?> GetMemoryLogs(string connectionId, [FromBody] QueryLogArgs args)
+	{
+		return _state.InvokeAsync<List<MemoryLog>>(connectionId, nameof(IMonitorClientHandler.GetMemoryLogs), args);
+	}
 
-    [HttpPost("net/{clientId}")]
-    public Task<List<NetworkLog>?> GetNetworkLogs(string clientId, [FromBody] QueryLogArgs args)
-    {
-        return _state.InvokeAsync<List<NetworkLog>>(clientId, nameof(IMonitorClientHandler.GetNetworkLogs), args);
-    }
+	[HttpPost("net/{connectionId}")]
+	public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, [FromBody] QueryLogArgs args)
+	{
+		return _state.InvokeAsync<List<NetworkLog>>(connectionId, nameof(IMonitorClientHandler.GetNetworkLogs), args);
+	}
 
-    [HttpPost("net/{clientId}")]
-    public Task<List<ServerResourceLog>?> GetServerResourceLogs(string clientId, [FromBody] QueryLogArgs args)
-    {
-        return _state.InvokeAsync<List<ServerResourceLog>>(clientId, nameof(IMonitorClientHandler.GetServerResourceLogs), args);
-    }
+	//[HttpPost("net/{connectionId}/{mac}")]
+	//public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, string mac, [FromBody] QueryLogArgs args)
+	//{
+	//	return _state.InvokeAsync<List<NetworkLog>>(connectionId, nameof(IMonitorClientHandler.GetNetworkLogs), mac, args);
+	//}
 
-    [HttpGet("partition/{clientId}/{drive}")]
-    public Task<List<PartitionLog>?> GetPartitionLogs(string clientId, string drive)
-    {
-        return _state.InvokeAsync<List<PartitionLog>>(clientId, nameof(IMonitorClientHandler.GetPartitionLog), drive);
-    }
+	[HttpGet("net/{connectionId}")]
+	public Task<Dictionary<string,string>?> GetNetworkCards(string connectionId)
+	{
+		return _state.InvokeAsync<Dictionary<string, string>>(connectionId, nameof(IMonitorClientHandler.GetNetworkCards));
+	}
 
-    [HttpGet("partitions/{clientId}")]
-    public Task<List<string>?> GetPartitions(string clientId)
-    {
-        return _state.InvokeAsync<List<string>>(clientId, nameof(IMonitorClientHandler.GetPartitions));
-    }
+	[HttpPost("{connectionId}")]
+	public Task<List<ServerResourceLog>?> GetServerResourceLogs(string connectionId, [FromBody] QueryLogArgs args)
+	{
+		return _state.InvokeAsync<List<ServerResourceLog>>(connectionId, nameof(IMonitorClientHandler.GetServerResourceLogs), args);
+	}
+
+	[HttpGet("partition/{connectionId}/{drive}")]
+	public Task<PartitionLog?> GetPartitionLog(string connectionId, string drive)
+	{
+		return _state.InvokeAsync<PartitionLog>(connectionId, nameof(IMonitorClientHandler.GetPartitionLog), drive);
+	}
+
+	[HttpGet("partitions/{connectionId}")]
+	public Task<List<string>?> GetPartitions(string connectionId)
+	{
+		return _state.InvokeAsync<List<string>>(connectionId, nameof(IMonitorClientHandler.GetPartitions));
+	}
 }

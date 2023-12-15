@@ -2,46 +2,45 @@
 
 <PageTitle>Network</PageTitle>
 <Stack IsRow="true">
-    <StackItem>
-        <BootstrapInputGroup>
-            <BootstrapInputGroupLabel DisplayText="时间范围"/>
-            <DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
-        </BootstrapInputGroup>
-    </StackItem>
+	<StackItem>
+		<BootstrapInputGroup>
+			<BootstrapInputGroupLabel DisplayText="时间范围"/>
+			<DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
+		</BootstrapInputGroup>
+	</StackItem>
 </Stack>
-<NetworkLogView @ref="_networkLogView"></NetworkLogView>
+<NetworkLogView @ref="LogView"></NetworkLogView>
 
 @code {
 
-    private NetworkLogView? _networkLogView;
+	protected LogViewBase? LogView { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (_networkLogView != null)
-        {
-            await _networkLogView.ReloadData();
-        }
-    }
+	protected override Task OnInitializedAsync()
+	{
+		return Task.CompletedTask;
+	}
 
-    private async Task ClearDateTimeRange(DateTimeRangeValue arg)
-    {
-        if (_networkLogView != null)
-        {
-            _networkLogView.StartTime = null;
-            _networkLogView.EndTime = null;
-            await _networkLogView.ReloadData();
-            _networkLogView.StartAutoRefreshData();
-        }
-    }
+	private async Task ClearDateTimeRange(DateTimeRangeValue arg)
+	{
+		if (LogView != null)
+		{
+			LogView.StartTime = null;
+			LogView.EndTime = null;
+			await LogView.ReloadData();
+			LogView.StartAutoRefreshData();
+		}
+	}
 
-    private async Task ConfirmDateTimeRange(DateTimeRangeValue arg)
-    {
-        if (_networkLogView != null)
-        {
-            _networkLogView.StopAutoRefreshData();
-            _networkLogView.StartTime = arg.Start;
-            _networkLogView.EndTime = arg.End;
-            await _networkLogView.ReloadData();
-        }
-    }
+	private Task ConfirmDateTimeRange(DateTimeRangeValue arg)
+	{
+		if (LogView != null)
+		{
+			LogView.StopAutoRefreshData();
+			LogView.StartTime = arg.Start;
+			LogView.EndTime = arg.End;
+			return LogView.ReloadData();
+		}
+
+		return Task.CompletedTask;
+	}
 }

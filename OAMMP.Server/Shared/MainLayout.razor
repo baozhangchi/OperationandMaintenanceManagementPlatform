@@ -14,17 +14,12 @@
 
 <PageTitle>OAMMP.Server</PageTitle>
 
-<Layout ShowCollapseBar="true" SideWidth="0" IsPage="true" IsFullSide="true" Menus="@MenuItems" IsFixedHeader="true" IsFixedFooter="true" ShowFooter="true">
+<Layout ShowCollapseBar="true" SideWidth="0" IsPage="true" IsCollapsed="@IsCollapsed" IsFullSide="true" IsFixedHeader="true" Menus="@MenuItems" IsFixedFooter="true" ShowFooter="true">
 	<Header>
-		<Stack IsRow="true">
-			<BootstrapLabel Value="选择服务器：" style="margin-top: .5rem; margin-left: .5rem; margin-right: .5rem;"></BootstrapLabel>
-			<Dropdown TValue="string" ShowSplit="false" ShowLabel="true" Items="@_monitors" Value="@ConnectionId" style="width: 1rem"></Dropdown>
-			@* <Select TValue="string" Items="@_monitors">
-				<DisplayTemplate>
-					<span>@context?.Text</span>
-				</DisplayTemplate>
-			</Select> *@
-		</Stack>
+		<BootstrapInputGroup>
+			<BootstrapInputGroupLabel DisplayText="选择服务器："></BootstrapInputGroupLabel>
+			<Select Items="@_monitors" TValue="string" @bind-Value="@ConnectionId"></Select>
+		</BootstrapInputGroup>
 	</Header>
 	<Side>
 	</Side>
@@ -48,9 +43,11 @@
 @code {
 	List<SelectedItem> _monitors = new();
 
-	private List<MenuItem>? MenuItems { get; set; }
+	private IEnumerable<MenuItem>? MenuItems { get; set; }
 
 	private string? ConnectionId { get; set; }
+
+	private bool IsCollapsed { get; set; }
 
 	protected override Task OnAfterRenderAsync(bool firstRender)
 	{
@@ -64,7 +61,7 @@
 		return base.OnAfterRenderAsync(firstRender);
 	}
 
-	private void OnApplicationsUpdated(string? clientId, List<ApplicationItem>? applicationItems)
+	private async void OnApplicationsUpdated(string? connectionId, List<ApplicationItem>? applicationItems)
 	{
 		var items = new List<MenuItem>
 		{
@@ -106,20 +103,16 @@
 			}
 		};
 
-		if (string.IsNullOrWhiteSpace(clientId))
+		if (string.IsNullOrWhiteSpace(connectionId) || connectionId != ConnectionId || applicationItems == null || !applicationItems.Any())
 		{
 			MenuItems = items;
-			return;
-		}
-
-		if (applicationItems != null && clientId == ConnectionId && applicationItems.Any())
-		{
-			MenuItems = items.Union(applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}"))).ToList();
 		}
 		else
 		{
-			MenuItems = items;
+			MenuItems = items.Union(applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}"))).ToList();
 		}
+
+		await InvokeAsync(StateHasChanged);
 	}
 
 
@@ -155,7 +148,6 @@
 		{
 			OnApplicationsUpdated(string.Empty, default);
 		}
-		await InvokeAsync(StateHasChanged);
 	}
 
 }

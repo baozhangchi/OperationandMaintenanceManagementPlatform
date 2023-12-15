@@ -1,16 +1,18 @@
 ﻿@page "/drivers"
 <PageTitle>Drivers</PageTitle>
-<DriversLogView @ref="_driversLogView"></DriversLogView>
+<DriversLogView @ref="LogView"></DriversLogView>
 
 @code {
 
-    private DriversLogView? _driversLogView;
+    protected LogViewBase? LogView { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (_driversLogView != null)
-        {
-            await _driversLogView.ReloadData();
-        }
-    }
+    // protected override Task OnInitializedAsync()
+    // {
+	   //  if (LogView != null)
+    //     {
+	   //      return LogView.ReloadData();
+    //     }
+
+	   //  return Task.CompletedTask;
+    // }
 }

@@ -1,46 +1,46 @@
 ﻿@page "/memory"
 <PageTitle>Memory</PageTitle>
 <Stack IsRow="true">
-    <StackItem>
-        <BootstrapInputGroup>
-            <BootstrapInputGroupLabel DisplayText="时间范围"/>
-            <DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
-        </BootstrapInputGroup>
-    </StackItem>
+	<StackItem>
+		<BootstrapInputGroup>
+			<BootstrapInputGroupLabel DisplayText="时间范围"/>
+			<DateTimeRange MaxValue="DateTime.Today" style="width:250px" ShowToday="true" AllowNull="true" OnClearValue="@ClearDateTimeRange" OnConfirm="@ConfirmDateTimeRange"/>
+		</BootstrapInputGroup>
+	</StackItem>
 </Stack>
-<MemoryLogView @ref="_memoryLogView"></MemoryLogView>
+@if (!string.IsNullOrWhiteSpace(ConnectionId))
+{
+	<MemoryLogView @ref="LogView"></MemoryLogView>
+}
 
 @code {
-    private MemoryLogView? _memoryLogView;
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (_memoryLogView != null)
-        {
-            await _memoryLogView.ReloadData();
-        }
-    }
+	[CascadingParameter(Name = "ConnectionId")]
+	public string? ConnectionId { get; set; }
+	protected LogViewBase? LogView { get; set; }
 
-    private async Task ClearDateTimeRange(DateTimeRangeValue arg)
-    {
-        if (_memoryLogView != null)
-        {
-            _memoryLogView.StartTime = null;
-            _memoryLogView.EndTime = null;
-            await _memoryLogView.ReloadData();
-            _memoryLogView.StartAutoRefreshData();
-        }
-    }
+	private async Task ClearDateTimeRange(DateTimeRangeValue arg)
+	{
+		if (LogView != null)
+		{
+			LogView.StartTime = null;
+			LogView.EndTime = null;
+			await LogView.ReloadData();
+			LogView.StartAutoRefreshData();
+		}
+	}
 
-    private async Task ConfirmDateTimeRange(DateTimeRangeValue arg)
-    {
-        if (_memoryLogView != null)
-        {
-            _memoryLogView.StopAutoRefreshData();
-            _memoryLogView.StartTime = arg.Start;
-            _memoryLogView.EndTime = arg.End;
-            await _memoryLogView.ReloadData();
-        }
-    }
+	private Task ConfirmDateTimeRange(DateTimeRangeValue arg)
+	{
+		if (LogView != null)
+		{
+			LogView.StopAutoRefreshData();
+			LogView.StartTime = arg.Start;
+			LogView.EndTime = arg.End;
+			return LogView.ReloadData();
+		}
+
+		return Task.CompletedTask;
+	}
 
 }

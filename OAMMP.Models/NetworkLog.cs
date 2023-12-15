@@ -5,7 +5,7 @@ namespace OAMMP.Models;
 public class NetworkLog : LogTableBase
 {
     [SugarColumn(CreateTableFieldSort = 2)]
-    public string? NetworkCardName { get; set; }
+    public string? Mac { get; set; }
 
     [SugarColumn(CreateTableFieldSort = 3)]
     public string? IpAddress { get; set; }
