@@ -11,9 +11,7 @@
 	  <None Remove="Models\**" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="BootstrapBlazor" Version="8.0.5" />
-		<PackageReference Include="BootstrapBlazor.Chart" Version="8.0.1" />
-		<PackageReference Include="BootstrapBlazor.FontAwesome" Version="8.0.1" />
+		<PackageReference Include="Blazor.Bootstrap" Version="1.10.4" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup>
