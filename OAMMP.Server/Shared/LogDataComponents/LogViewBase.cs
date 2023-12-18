@@ -10,9 +10,6 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 
 	protected DateTime? LastTime;
 
-	[CascadingParameter(Name = "ConnectionId")]
-	public string? ConnectionId { get; set; }
-
 	[Parameter] public DateTime? EndTime { get; set; }
 
 	[Parameter] public DateTime? StartTime { get; set; }
@@ -26,54 +23,14 @@ public abstract class LogViewBase : ComponentBase, IDisposable
 	{
 		_timer = new Timer(5 * 1000);
 		_timer.Elapsed += Timer_Elapsed;
-		if (!string.IsNullOrEmpty(ConnectionId))
-		{
-			ReloadData();
-			StartAutoRefreshData();
-		}
-
+		ReloadData();
+		StartAutoRefreshData();
 		return base.OnInitializedAsync();
 	}
 
 	public abstract Task RefreshData();
 
 	public abstract Task ReloadData();
-
-	public override async Task SetParametersAsync(ParameterView parameters)
-	{
-		await base.SetParametersAsync(parameters);
-		foreach (var parameter in parameters)
-		{
-			var value = parameter.Value;
-			switch (parameter.Name)
-			{
-				case nameof(ConnectionId):
-					{
-						if (_timer != null)
-						{
-							_timer.Stop();
-							StartTime = null;
-							EndTime = null;
-							LastTime = null;
-							await ReloadData();
-							if(!string.IsNullOrWhiteSpace((string)value))
-							{
-								try
-								{
-									_timer.Start();
-								}
-								catch (ObjectDisposedException e)
-								{
-									
-								}
-							}
-						}
-
-						break;
-					}
-			}
-		}
-	}
 
 	public void StartAutoRefreshData()
 	{

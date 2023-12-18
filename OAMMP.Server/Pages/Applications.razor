@@ -38,30 +38,6 @@
 </Table>
 
 @code {
-
-	[CascadingParameter(Name = "ConnectionId")]
-	public string? ConnectionId { get; set; }
-
-	public override async Task SetParametersAsync(ParameterView parameters)
-	{
-		await base.SetParametersAsync(parameters);
-		foreach (var parameter in parameters)
-		{
-			switch (parameter.Name)
-			{
-				case nameof(ConnectionId):
-					{
-						if (_applicationDataView != null)
-						{
-							await _applicationDataView.QueryAsync();
-						}
-
-						break;
-					}
-			}
-		}
-	}
-
 	private async Task AutoRestartChanged(bool arg)
 	{
 		if (_restartTimeSelector != null)
@@ -78,12 +54,7 @@
 
 	private async Task<QueryData<ApplicationItem>> QueryAsync(QueryPageOptions arg)
 	{
-		if (string.IsNullOrEmpty(ConnectionId))
-		{
-			return new QueryData<ApplicationItem>();
-		}
-
-		_applicationItems = await ServiceUtils.Instance.GetApplications(ConnectionId);
+		_applicationItems = await ServiceUtils.Instance.GetApplications();
 
 		return new QueryData<ApplicationItem>
 			{
@@ -94,12 +65,11 @@
 
 	private async Task<bool> SaveApplicationAsync(ApplicationItem application, ItemChangedType changedType)
 	{
-		if (string.IsNullOrEmpty(ConnectionId))
+		if (!application.AutoRestart)
 		{
-			return false;
+			application.AutoRestartTimeValue = null;
 		}
-
-		return await ServiceUtils.Instance.SaveApplication(ConnectionId, application);
+		return await ServiceUtils.Instance.SaveApplication(application);
 	}
 
 	private Task OpenApplicationPage(ApplicationItem application)
@@ -114,12 +84,7 @@
 
 	private async Task<bool> DeleteApplicationAsync(IEnumerable<ApplicationItem> arg)
 	{
-		if (string.IsNullOrEmpty(ConnectionId))
-		{
-			return false;
-		}
-
-		return await ServiceUtils.Instance.DeleteApplications(ConnectionId, arg.Select(x=>x.UUID).ToList());
+		return await ServiceUtils.Instance.DeleteApplications(arg.Select(x => x.UUID).ToList());
 	}
 
 }

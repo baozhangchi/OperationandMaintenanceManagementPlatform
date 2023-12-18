@@ -15,7 +15,7 @@
 
 	public override async Task ReloadData()
 	{
-		UpdateNetworkCards(ConnectionId);
+		await UpdateNetworkCards();
 		if (_chart != null)
 		{
 			LastTime = null;
@@ -24,17 +24,9 @@
 		}
 	}
 
-	private async void UpdateNetworkCards(string? connectionId)
+	private async Task UpdateNetworkCards()
 	{
-		if (connectionId == null)
-		{
-			NetworkCards = null;
-		}
-		else
-		{
-			NetworkCards = await ServiceUtils.Instance.GetNetworkCards(connectionId);
-		}
-
+		NetworkCards = await ServiceUtils.Instance.GetNetworkCards();
 		await InvokeAsync(StateHasChanged);
 	}
 
@@ -55,7 +47,7 @@
 		dataSource.Options.ShowXScales = false;
 		dataSource.Options.ShowLegend = true;
 		dataSource.Options.LegendPosition = ChartLegendPosition.Left;
-		if (string.IsNullOrEmpty(ConnectionId) || NetworkCards == null || NetworkCards.Count == 0)
+		if (NetworkCards == null || NetworkCards.Count == 0)
 		{
 			return dataSource;
 		}
@@ -65,7 +57,7 @@
 			: LastTime.HasValue
 				? new QueryLogArgs(LastTime.Value)
 				: new QueryLogArgs(1000);
-		var data = await ServiceUtils.Instance.GetNetworkLogs(ConnectionId, arg);
+		var data = await ServiceUtils.Instance.GetNetworkLogs(arg);
 		if (data == null || !data.Any()) return dataSource;
 		LastTime = data.Max(x => x.Time);
 		dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).Distinct().ToList();

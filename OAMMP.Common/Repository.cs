@@ -130,6 +130,29 @@ public class LogRepository<T> : Repository<T> where T : LogTableBase, new()
 		var ids = await Context.Insertable(insertObjs).ExecuteReturnSnowflakeIdListAsync();
 		return ids.Count > 0;
 	}
+
+
+	public async Task<List<T>> GetLogData(QueryLogArgs args, Expression<Func<T, bool>>? exp = null)
+	{
+		var expression = new Expressionable<T>();
+		if (exp != null)
+		{
+			expression.And(exp);
+		}
+
+		expression.AndIF(args.StartTime.HasValue, x => x.Time > args.StartTime!.Value);
+		expression.AndIF(args.EndTime.HasValue, x => x.Time <= args.EndTime!.Value);
+		if (args.Count.HasValue)
+		{
+			var items = await GetLatestListAsync(expression.ToExpression(), args.Count.Value);
+			return items;
+		}
+		else
+		{
+			var items = await GetLatestListAsync(expression.ToExpression());
+			return items;
+		}
+	}
 }
 
 public class BackupRepository<T> : Repository<T> where T : LogTableBase, new()

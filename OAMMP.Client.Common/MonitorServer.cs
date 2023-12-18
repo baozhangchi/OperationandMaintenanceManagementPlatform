@@ -2,7 +2,7 @@
 
 public class MonitorServer
 {
-	public string? HubClientId { get; set; }
-	public string? Label { get; set; }
-    public string? Ip { get; set; }
+	public string Ip { get; set; } = null!;
+
+	public string Url { get; set; } = null!;
 }

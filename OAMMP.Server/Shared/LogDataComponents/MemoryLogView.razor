@@ -17,19 +17,13 @@
 		dataSource.Options.Y.Title = "Mb";
 		dataSource.Options.ShowXScales = false;
 		dataSource.Options.ShowLegend = false;
-		if (string.IsNullOrEmpty(ConnectionId))
-		{
-			return dataSource;
-		}
 
 		var arg = StartTime.HasValue && EndTime.HasValue
 			? new QueryLogArgs(StartTime.Value, EndTime.Value)
 			: LastTime.HasValue
 				? new QueryLogArgs(LastTime.Value)
 				: new QueryLogArgs(1000);
-		// var data = await ClientProxy
-		//     .InvokeAsync<List<MemoryLog>>(nameof(IMonitorClientHandler.GetMemoryLogs), arg, CancellationToken.None);
-		var data = await ServiceUtils.Instance.GetMemoryLogs(ConnectionId, arg);
+		var data = await ServiceUtils.Instance.GetMemoryLogs(arg);
 		if (data == null || !data.Any()) return dataSource;
 		dataSource.Labels = data.Select(x => x.Time.ToString("yyyy-MM-dd HH:mm:ss")).ToList();
 		LastTime = data.Max(x => x.Time);

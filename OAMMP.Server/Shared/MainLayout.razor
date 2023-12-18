@@ -1,16 +1,15 @@
 @layout TelerikLayout
 @inherits LayoutComponentBase
-@using Microsoft.AspNetCore.SignalR
+@using OAMMP.Models
 @using OAMMP.Client.Common
 @using OAMMP.Common
-@using OAMMP.Models
-@using OAMMP.Server.Hubs
-@using IClientHandler = OAMMP.Client.Common.IClientHandler
+@using System.ComponentModel
+@using System.Runtime.CompilerServices
 @implements IAsyncDisposable
 @inject NavigationManager Navigation
 @inject SignalRClient<IClientHandler> Client
 @inject IClientHandler ClientHandler
-@inject IHubContext<MonitorHub> HubContext
+@implements System.ComponentModel.INotifyPropertyChanged
 
 <PageTitle>OAMMP.Server</PageTitle>
 
@@ -18,22 +17,20 @@
 	<Header>
 		<BootstrapInputGroup>
 			<BootstrapInputGroupLabel DisplayText="选择服务器："></BootstrapInputGroupLabel>
-			<Select Items="@_monitors" TValue="string" @bind-Value="@ConnectionId"></Select>
+			<Select Items="@_monitors" TValue="string" @bind-Value="@CurrentUrl"></Select>
 		</BootstrapInputGroup>
 	</Header>
 	<Side>
 	</Side>
 	<Main>
-		<CascadingValue TValue="string" Value="@ConnectionId" Name="ConnectionId">
-			@if (string.IsNullOrEmpty(ConnectionId))
-			{
-				<div>请先选择一个服务器</div>
-			}
-			else
-			{
-				@Body
-			}
-		</CascadingValue>
+		@if (ServiceUtils==null)
+		{
+			<div>请先选择一个服务器</div>
+		}
+		else
+		{
+			@Body
+		}
 	</Main>
 	<Footer>
 		<div>Footer</div>
@@ -42,22 +39,52 @@
 
 @code {
 	List<SelectedItem> _monitors = new();
+	private string? _currentUrl;
+	private IEnumerable<MenuItem>? _menuItems;
+	private ServiceUtils? _serviceUtils;
 
-	private IEnumerable<MenuItem>? MenuItems { get; set; }
+	private IEnumerable<MenuItem>? MenuItems
+	{
+		get => _menuItems;
+		set => SetField(ref _menuItems, value);
+	}
 
-	private string? ConnectionId { get; set; }
+	public ServiceUtils? ServiceUtils
+	{
+		get => _serviceUtils;
+		set => SetField(ref _serviceUtils, value);
+	}
 
-	private bool IsCollapsed { get; set; }
+	private string? CurrentUrl
+	{
+		get => _currentUrl;
+		set
+		{
+			if (SetField(ref _currentUrl, value))
+			{
+				if (value != null)
+				{
+					ServiceUtils.Instance.Init(value);
+					ServiceUtils = ServiceUtils.Instance;
+				}
+				else
+				{
+					ServiceUtils = null;
+				}
+			}
+		}
+	}
+
+	private bool IsCollapsed { get; }
 
 	protected override Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender)
 		{
-			ServiceUtils.Instance.Init(Navigation.ToAbsoluteUri("/").ToString());
-			ClientHandler.ClientsUpdatedFunc = ClientsUpdated;
-			ClientHandler.OnApplicationsUpdated += OnApplicationsUpdated;
+			Client.ClientHandler.SetOnMonitorServersUpdated(ClientsUpdated);
 			Client.Connect(Navigation.ToAbsoluteUri("/Client"));
 		}
+
 		return base.OnAfterRenderAsync(firstRender);
 	}
 
@@ -103,7 +130,7 @@
 			}
 		};
 
-		if (string.IsNullOrWhiteSpace(connectionId) || connectionId != ConnectionId || applicationItems == null || !applicationItems.Any())
+		if (string.IsNullOrWhiteSpace(connectionId) || connectionId != CurrentUrl || applicationItems == null || !applicationItems.Any())
 		{
 			MenuItems = items;
 		}
@@ -111,8 +138,6 @@
 		{
 			MenuItems = items.Union(applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}"))).ToList();
 		}
-
-		await InvokeAsync(StateHasChanged);
 	}
 
 
@@ -121,33 +146,49 @@
 		await Task.CompletedTask;
 	}
 
-	public async Task ClientsUpdated(List<MonitorServer> monitorServers)
+	public async void ClientsUpdated(List<MonitorServer> monitorServers)
 	{
 		var currentClientIp = string.Empty;
-		if (!string.IsNullOrWhiteSpace(ConnectionId))
+		if (!string.IsNullOrWhiteSpace(CurrentUrl))
 		{
-			currentClientIp = _monitors.Single(x => x.Value == ConnectionId).Text;
+			currentClientIp = _monitors.Single(x => x.Value == CurrentUrl).Text;
 		}
 
-		_monitors = monitorServers.Select(x => new SelectedItem(x.HubClientId!, x.Ip!)).ToList();
+		_monitors = monitorServers.Select(x => new SelectedItem(x.Url!, x.Ip!)).ToList();
 		if (!string.IsNullOrWhiteSpace(currentClientIp) && _monitors.Any(x => x.Text == currentClientIp))
 		{
-			ConnectionId = _monitors.Single(x => x.Text == currentClientIp).Value;
+			CurrentUrl = _monitors.Single(x => x.Text == currentClientIp).Value;
 		}
 		else
 		{
-			ConnectionId = _monitors.FirstOrDefault()?.Value;
+			CurrentUrl = _monitors.FirstOrDefault()?.Value;
 		}
 
-		if (!string.IsNullOrEmpty(ConnectionId))
+		if (!string.IsNullOrEmpty(CurrentUrl))
 		{
-			var applicationItems = await ServiceUtils.Instance.GetApplications(ConnectionId);
-			OnApplicationsUpdated(ConnectionId!, applicationItems);
+			var applicationItems = await ServiceUtils.Instance.GetApplications();
+			OnApplicationsUpdated(CurrentUrl!, applicationItems);
 		}
 		else
 		{
 			OnApplicationsUpdated(string.Empty, default);
 		}
+	}
+
+	public event PropertyChangedEventHandler? PropertyChanged;
+
+	protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+	{
+		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+	}
+
+	protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+	{
+		if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+		field = value;
+		OnPropertyChanged(propertyName);
+		InvokeAsync(StateHasChanged);
+		return true;
 	}
 
 }

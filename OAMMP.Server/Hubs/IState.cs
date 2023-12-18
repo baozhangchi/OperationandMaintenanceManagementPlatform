@@ -5,10 +5,10 @@ namespace OAMMP.Server.Hubs;
 
 public class ClientState : IClientState
 {
-    public IHubCallerClients? Clients { get; set; }
+	public IHubCallerClients<IClientHandler>? Clients { get; set; }
 }
 
 public interface IClientState
 {
-    IHubCallerClients? Clients { get; set; }
+	IHubCallerClients<IClientHandler>? Clients { get; set; }
 }

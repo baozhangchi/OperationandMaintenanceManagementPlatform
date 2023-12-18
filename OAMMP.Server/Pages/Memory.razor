@@ -8,15 +8,9 @@
 		</BootstrapInputGroup>
 	</StackItem>
 </Stack>
-@if (!string.IsNullOrWhiteSpace(ConnectionId))
-{
-	<MemoryLogView @ref="LogView"></MemoryLogView>
-}
+<MemoryLogView @ref="LogView"></MemoryLogView>
 
 @code {
-
-	[CascadingParameter(Name = "ConnectionId")]
-	public string? ConnectionId { get; set; }
 	protected LogViewBase? LogView { get; set; }
 
 	private async Task ClearDateTimeRange(DateTimeRangeValue arg)

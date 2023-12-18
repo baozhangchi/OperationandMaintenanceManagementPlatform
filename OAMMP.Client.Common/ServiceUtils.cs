@@ -1,11 +1,9 @@
 ﻿#region
 
-using System;
 using System.Text;
 using Newtonsoft.Json;
 using OAMMP.Common;
 using OAMMP.Models;
-using static System.Net.Mime.MediaTypeNames;
 
 #endregion
 
@@ -28,79 +26,84 @@ public class ServiceUtils
 		_baseUrl = baseUrl;
 	}
 
-	public Task<List<ApplicationItem>?> GetApplications(string connectionId)
+	public Task<List<ApplicationItem>?> GetApplications()
 	{
-		return Send<List<ApplicationItem>>($"/api/Application/{connectionId}");
+		return Send<List<ApplicationItem>>("/api/Application");
 	}
 
-	public Task<List<ApplicationLog>?> GetApplicationLogs(string connectionId, long applicationId,
+	public Task<List<ApplicationLog>?> GetApplicationLogs(long applicationId,
 		QueryLogArgs queryLogArgs)
 	{
-		return Send<List<ApplicationLog>>($"/api/Application/{connectionId}/{applicationId}", queryLogArgs, HttpMethod.Post);
+		return Send<List<ApplicationLog>>($"/api/Application/{applicationId}", queryLogArgs, HttpMethod.Post);
 	}
 
-	public Task<bool> SaveApplication(string connectionId, ApplicationItem application)
+	public Task<bool> SaveApplication(ApplicationItem application)
 	{
-		return Send<bool>($"/api/Application/{connectionId}", application, HttpMethod.Post);
+		return Send<bool>("/api/Application", application, HttpMethod.Post);
 	}
 
-	public Task<bool> GetApplicationAlive(string connectionId, long applicationId)
+	public Task<bool> GetApplicationAlive(long applicationId)
 	{
-		return Send<bool>($"/api/Application/alive/{connectionId}/{applicationId}");
+		return Send<bool>($"/api/Application/alive/{applicationId}");
 	}
 
-	public Task<ApplicationItem?> GetApplication(string connectionId, long applicationId)
+	public Task<ApplicationItem?> GetApplication(long applicationId)
 	{
-		return Send<ApplicationItem>($"/api/Application/app/{connectionId}/{applicationId}");
+		return Send<ApplicationItem>($"/api/Application/app/{applicationId}");
 	}
 
-	public Task<bool> DeleteApplications(string connectionId, List<long> applicationIds)
+	public Task<bool> DeleteApplications(List<long> applicationIds)
 	{
-		return Send<bool>($"/api/Application/{connectionId}", applicationIds, HttpMethod.Delete);
+		return Send<bool>("/api/Application", applicationIds, HttpMethod.Delete);
 	}
 
-	public Task<List<CpuLog>?> GetCpuLogs(string connectionId, QueryLogArgs args)
+	public Task<List<CpuLog>?> GetCpuLogs(QueryLogArgs args)
 	{
-		return Send<List<CpuLog>>($"/api/Resources/cpu/{connectionId}", args, HttpMethod.Post);
+		return Send<List<CpuLog>>("/api/Resources/cpu", args, HttpMethod.Post);
 	}
 
-	public Task<List<MemoryLog>?> GetMemoryLogs(string connectionId, QueryLogArgs args)
+	public Task<List<MemoryLog>?> GetMemoryLogs(QueryLogArgs args)
 	{
-		return Send<List<MemoryLog>>($"/api/Resources/memory/{connectionId}", args, HttpMethod.Post);
+		return Send<List<MemoryLog>>("/api/Resources/memory", args, HttpMethod.Post);
 	}
 
-	public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, QueryLogArgs args)
+	public Task<List<NetworkLog>?> GetNetworkLogs(QueryLogArgs args)
 	{
-		return Send<List<NetworkLog>>($"/api/Resources/net/{connectionId}", args, HttpMethod.Post);
+		return Send<List<NetworkLog>>("/api/Resources/net", args, HttpMethod.Post);
 	}
 
-	//public Task<List<NetworkLog>?> GetNetworkLogs(string connectionId, string mac, QueryLogArgs args)
-	//{
-	//	return Send<List<NetworkLog>>($"/api/Resources/net/{connectionId}/{mac}", args, HttpMethod.Post);
-	//}
-
-	public Task<List<ServerResourceLog>?> GetServerResourceLogs(string connectionId, QueryLogArgs args)
+	public Task<List<NetworkLog>?> GetNetworkLogs(string mac, QueryLogArgs args)
 	{
-		return Send<List<ServerResourceLog>>($"/api/Resources/{connectionId}", args, HttpMethod.Post);
+		return Send<List<NetworkLog>>($"/api/Resources/net/{mac}", args, HttpMethod.Post);
 	}
 
-	public Task<PartitionLog?> GetPartitionLogs(string connectionId, string drive)
+	public Task<List<ServerResourceLog>?> GetServerResourceLogs(QueryLogArgs args)
 	{
-		return Send<PartitionLog>($"/api/Resources/partition/{connectionId}/{drive}");
+		return Send<List<ServerResourceLog>>("/api/Resources", args, HttpMethod.Post);
 	}
 
-	public Task<List<string>?> GetPartitions(string connectionId)
+	public Task<PartitionLog?> GetPartitionLogs(string drive)
 	{
-		return Send<List<string>>($"/api/Resources/partitions/{connectionId}");
+		return Send<PartitionLog>($"/api/Resources/partition/{drive}");
 	}
 
-	public Task<Dictionary<string, string>?> GetNetworkCards(string connectionId)
+	public Task<List<string>?> GetPartitions()
 	{
-		return Send<Dictionary<string, string>>($"/api/Resources/net/{connectionId}");
+		return Send<List<string>>("/api/Resources/partitions");
+	}
+
+	public Task<Dictionary<string, string>?> GetNetworkCards()
+	{
+		return Send<Dictionary<string, string>>("/api/Resources/net");
 	}
 
 	private async Task<T?> Send<T>(string url, object? data = null, HttpMethod? method = null)
 	{
+		if (string.IsNullOrWhiteSpace(_baseUrl))
+		{
+			return default;
+		}
+
 		var requestMessage = new HttpRequestMessage();
 		requestMessage.RequestUri = new Uri($"{_baseUrl!.TrimEnd('/')}/{url.TrimStart('/')}");
 		requestMessage.Method = method ?? HttpMethod.Get;

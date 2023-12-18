@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json.Linq;
-using OAMMP.Client.Common;
-using OAMMP.Models;
 
 namespace OAMMP.Server.Hubs;
 
 public class MonitorHub : Hub
 {
-	private readonly IMonitorState _monitorState;
 	private readonly IClientState _clientState;
+	private readonly IMonitorState _monitorState;
 
 	public MonitorHub(IServiceProvider serviceProvider)
 	{
@@ -16,41 +14,19 @@ public class MonitorHub : Hub
 		_clientState = serviceProvider.GetRequiredService<IClientState>();
 	}
 
-	public Task Callback(string taskId, JToken state)
-	{
-		_monitorState.CompleteTask(taskId, state);
-		return Task.CompletedTask;
-	}
-
-	public Task ApplicationsUpdated(List<ApplicationItem> applicationItems)
-	{
-		if (_clientState.Clients != null)
-		{
-			return _clientState.Clients.All.SendAsync(nameof(IClientHandler.ApplicationsUpdated), Context.ConnectionId,
-				applicationItems, CancellationToken.None);
-		}
-
-		return Task.CompletedTask;
-	}
-
 	private string GetClientIpAddress()
 	{
-		return Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+		return Context.GetHttpContext()!.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
 	}
 
 	public override Task OnConnectedAsync()
 	{
 		var clientIpAddress = GetClientIpAddress();
-		if (!string.IsNullOrWhiteSpace(clientIpAddress))
-		{
-			_monitorState[clientIpAddress] = Context.ConnectionId;
-		}
+		var apiUrl = Context.GetHttpContext()!.Request.Query["url"].ToString();
+		_monitorState[clientIpAddress] = apiUrl;
 
 		_monitorState.Clients = Clients;
-		if (_clientState.Clients != null)
-		{
-			return _clientState.Clients.All.SendAsync(nameof(IClientHandler.ClientsUpdated), _monitorState.ToList());
-		}
+		if (_clientState.Clients != null) _clientState.Clients.All.ClientsUpdated(_monitorState.ToList());
 
 		return Task.CompletedTask;
 	}
@@ -65,10 +41,7 @@ public class MonitorHub : Hub
 		}
 
 		_monitorState.Clients = Clients;
-		if (_clientState.Clients != null)
-		{
-			return _clientState.Clients.All.SendAsync(nameof(IClientHandler.ClientsUpdated), _monitorState.ToList());
-		}
+		if (_clientState.Clients != null) _clientState.Clients.All.ClientsUpdated(_monitorState.ToList());
 
 		return Task.CompletedTask;
 	}
