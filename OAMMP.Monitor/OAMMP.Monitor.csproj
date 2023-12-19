@@ -11,6 +11,8 @@
 		<PackageReference Include="CZGL.SystemInfo" Version="2.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+		<PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\OAMMP.Common\OAMMP.Common.csproj" />

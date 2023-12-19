@@ -1,20 +1,23 @@
 using System.Timers;
-using Microsoft.Extensions.Hosting;
 using Timer = System.Timers.Timer;
 
 namespace OAMMP.Monitor.BackgroundServices;
 
-public abstract class TimeBackgroundService : BackgroundService
+public abstract class TimeBackgroundService<T> : BackgroundService
+    where T : TimeBackgroundService<T>
 {
-    private Timer? _timer;
+    private readonly ILogger<T> _logger;
     private bool _isRunning;
+    private Timer? _timer;
+
+    protected TimeBackgroundService(ILogger<T> logger)
+    {
+        _logger = logger;
+    }
 
     protected sealed override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (_isRunning)
-        {
-            await Task.Delay(100, stoppingToken);
-        }
+        while (_isRunning) await Task.Delay(100, stoppingToken);
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)
@@ -44,7 +47,13 @@ public abstract class TimeBackgroundService : BackgroundService
         if (sender is Timer timer)
         {
             timer.Stop();
-            await ExecuteAsync(DateTime.Now);
+            await ExecuteAsync(DateTime.Now).ContinueWith(task =>
+            {
+                if (task.IsFaulted && task.Exception != null)
+                {
+                    _logger.LogError(task.Exception, task.Exception.Message);
+                }
+            });
             timer.Start();
         }
     }

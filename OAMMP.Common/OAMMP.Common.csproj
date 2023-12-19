@@ -8,10 +8,17 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="5.3.7" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\OAMMP.Models\OAMMP.Models.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="nlog.config">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

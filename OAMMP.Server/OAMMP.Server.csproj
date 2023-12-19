@@ -21,7 +21,4 @@
 		<ProjectReference Include="..\OAMMP.Common\OAMMP.Common.csproj" />
 		<ProjectReference Include="..\OAMMP.Models\OAMMP.Models.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="Shared\Application\" />
-	</ItemGroup>
 </Project>

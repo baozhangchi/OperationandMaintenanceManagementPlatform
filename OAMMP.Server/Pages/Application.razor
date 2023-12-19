@@ -4,92 +4,109 @@
 @using System.Timers
 @using OAMMP.Client.Common
 @inject DialogService DialogService
+@inject MessageService MessageService
 <PageTitle>Application</PageTitle>
 
 <h3>
-	@_application?.Name
-	<svg height="30" width="30">
-		@{
-			var color = _appAlive ? "#1ab394" : "#d9d2c2";
-		}
-		<circle cx="15" cy="15" r="10" stroke="black" stroke-width="0" fill="@color" />
-	</svg>
+    @_application?.Name
+    <svg height="30" width="30">
+        @{
+            var color = _appAlive ? "#1ab394" : "#d9d2c2";
+        }
+        <circle cx="15" cy="15" r="10" stroke="black" stroke-width="0" fill="@color"/>
+    </svg>
+    @* <Button Icon="fa-solid fa-play"></Button> *@
+    @* <Button Icon="fa-solid fa-stop"></Button> *@
 </h3>
 @if (_application != null)
 {
-	<Stack IsRow="true">
-		<StackItem>
-			<Button Text="更新版本" OnClick="@UpdateVersion"></Button>
-		</StackItem>
-		<StackItem>
-			<Button Text="备份应用"></Button>
-		</StackItem>
-		<StackItem>
-			<Button Text="日志管理"></Button>
-		</StackItem>
-	</Stack>
-	<ApplicationLogView ApplicationId="@_application.UUID"></ApplicationLogView>
+    <Stack IsRow="true">
+        <StackItem>
+            <Button Text="更新版本" OnClick="@UpdateVersion"></Button>
+        </StackItem>
+        <StackItem>
+            <Button Text="备份应用"></Button>
+        </StackItem>
+        <StackItem>
+            <Button Text="日志管理"></Button>
+        </StackItem>
+    </Stack>
+    <ApplicationLogView ApplicationId="@_application.UUID"></ApplicationLogView>
 }
 
 @code {
 
-	[Parameter] public long ApplicationId { get; set; }
+    [Parameter] public long ApplicationId { get; set; }
 
-	private ApplicationItem? _application;
-	private Timer? _timer;
-	private bool _appAlive;
+    private ApplicationItem? _application;
+    private Timer? _timer;
+    private bool _appAlive;
 
-	protected override async Task OnInitializedAsync()
-	{
-		_appAlive = await ServiceUtils.Instance.GetApplicationAlive(ApplicationId);
-		_application = await ServiceUtils.Instance.GetApplication(ApplicationId);
-		await InvokeAsync(StateHasChanged);
+    protected override async Task OnInitializedAsync()
+    {
+        _appAlive = await ServiceUtils.Instance.GetApplicationAlive(ApplicationId);
+        _application = await ServiceUtils.Instance.GetApplication(ApplicationId);
+        await InvokeAsync(StateHasChanged);
 
-		_timer = new Timer(5 * 1000);
-		_timer.Elapsed += Timer_Elapsed;
-		_timer.Start();
+        _timer = new Timer(5 * 1000);
+        _timer.Elapsed += Timer_Elapsed;
+        _timer.Start();
 
-		await base.OnInitializedAsync();
-	}
+        await base.OnInitializedAsync();
+    }
 
-	private async void Timer_Elapsed(object? sender, ElapsedEventArgs e)
-	{
-		if (sender is Timer timer)
-		{
-			timer.Stop();
-			_appAlive = await ServiceUtils.Instance.GetApplicationAlive(ApplicationId);
-			_application = await ServiceUtils.Instance.GetApplication(ApplicationId);
-			await InvokeAsync(StateHasChanged);
-			timer.Start();
-		}
-	}
+    private async void Timer_Elapsed(object? sender, ElapsedEventArgs e)
+    {
+        if (sender is Timer timer)
+        {
+            timer.Stop();
+            _appAlive = await ServiceUtils.Instance.GetApplicationAlive(ApplicationId);
+            _application = await ServiceUtils.Instance.GetApplication(ApplicationId);
+            await InvokeAsync(StateHasChanged);
+            timer.Start();
+        }
+    }
 
-	private Task UpdateVersion()
-	{
-		var option = new DialogOption
-			{
-				Title = "更新版本",
-				Size = Size.Medium,
-				ShowFooter = false,
-				ShowMaximizeButton = false
-			};
-		option.Component = BootstrapDynamicComponent.CreateComponent<FileUpload>(new Dictionary<string, object?>
-		{
-			{
-				nameof(FileUpload.OnConfirmClick), EventCallback.Factory.Create(this, async () =>
-				{
-					await Task.CompletedTask;
-					// await option.CloseDialogAsync();
-				})
-			}
-		});
-		return DialogService.Show(option);
-	}
+    private Task UpdateVersion()
+    {
+        var option = new DialogOption
+        {
+            Title = "更新版本",
+            Size = Size.Medium,
+            ShowFooter = false,
+            ShowMaximizeButton = false
+        };
+
+        option.Component = BootstrapDynamicComponent.CreateComponent<FileUpload>(new Dictionary<string, object?>
+        {
+            {
+                nameof(FileUpload.OnConfirmClick), EventCallback.Factory.Create<MultipartFormDataContent>(this, async content =>
+                {
+                    var response = await ServiceUtils.Instance.UpdateVersion(ApplicationId, content);
+                    if (response)
+                    {
+                        await MessageService.Show(new MessageOption()
+                        {
+                            Content = "更新成功",
+                            Color = Color.Success
+                        });
+                        await option.CloseDialogAsync();
+                    }
+                    else
+                    {
+                        await MessageService.Show(new MessageOption()
+                        {
+                            Content = "更新失败",
+                            Color = Color.Danger
+                        });
+                    }
+                })
+            },
+            {
+                nameof(FileUpload.OnCancelClick), EventCallback.Factory.Create(this, async (content) => { await option.CloseDialogAsync(); })
+            }
+        });
+        return DialogService.Show(option);
+    }
 
 }
-
-<style>
-	.bb_stack_item {
-		margin: 5px
-	}
-</style>

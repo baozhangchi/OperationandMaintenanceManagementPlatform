@@ -1,4 +1,5 @@
-﻿<InputUpload @ref="_uploader" TValue="string" OnChange="@FileChange" OnDelete="@DeleteFile"></InputUpload>
+﻿@inject MessageService MessageService
+<InputUpload @ref="_uploader" TValue="string" Accept=".tar.gz" OnChange="@FileChange" OnDelete="@DeleteFile"></InputUpload>
 <Stack IsRow="true" AlignItems="StackAlignItems.Center" Justify="StackJustifyContent.Center">
     <StackItem>
         <DialogSaveButton Text="确定" OnClick="@Confirm"></DialogSaveButton>
@@ -9,28 +10,31 @@
 </Stack>
 
 @code {
-    
-    [Parameter]
-    public EventCallback? OnConfirmClick { get; set; }
-    [Parameter]
-    public EventCallback? OnCancelClick { get; set; }
+
+    [Parameter] public EventCallback<MultipartFormDataContent>? OnConfirmClick { get; set; }
+    [Parameter] public EventCallback? OnCancelClick { get; set; }
+    [Parameter] public string? Filter { get; set; }
 
     private async Task FileChange(UploadFile arg)
     {
         if (_uploader != null)
         {
+            _file = arg.File;
             _uploader.ShowDeleteButton = true;
         }
+
         await Task.CompletedTask;
     }
 
     private InputUpload<string>? _uploader;
+    private IBrowserFile? _file;
 
     private Task<bool> DeleteFile(UploadFile arg)
     {
         if (_uploader != null)
         {
             _uploader.ShowDeleteButton = false;
+            _file = null;
         }
 
         return Task.FromResult(true);
@@ -38,9 +42,21 @@
 
     private async Task Confirm()
     {
+        if (_file == null)
+        {
+            await MessageService.Show(new MessageOption()
+            {
+                Content = "请先选择一个文件",
+                Color = Color.Danger
+            });
+            return;
+        }
+
         if (OnConfirmClick.HasValue)
         {
-            await OnConfirmClick.Value.InvokeAsync();
+            var content = new MultipartFormDataContent();
+            content.Add(content: new StreamContent(_file.OpenReadStream()), "\"files\"", _file.Name);
+            await OnConfirmClick.Value.InvokeAsync(content);
         }
     }
 

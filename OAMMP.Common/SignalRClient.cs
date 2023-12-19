@@ -7,7 +7,7 @@ public class SignalRClient<T>
 	where T : class
 {
 	public readonly T ClientHandler;
-	private HubConnection? _hubConnection;
+	public HubConnection? Connection { get; private set; }
 	private Uri? _uri;
 
 	public SignalRClient(T clientHandler)
@@ -26,10 +26,10 @@ public class SignalRClient<T>
 		var builder = new HubConnectionBuilder();
 		builder.WithUrl(_uri).WithAutomaticReconnect(new[]
 			{ TimeSpan.Zero, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10) });
-		_hubConnection = builder.Build();
-		_hubConnection.Closed += ReConnect;
+		Connection = builder.Build();
+		Connection.Closed += ReConnect;
 
-		RegisterListenMethods(_hubConnection);
+		RegisterListenMethods(Connection);
 
 		await ConnectHub();
 	}
@@ -59,10 +59,10 @@ public class SignalRClient<T>
 
 	private async Task ConnectHub()
 	{
-		if (_hubConnection == null) return;
+		if (Connection == null) return;
 		try
 		{
-			await _hubConnection.StartAsync();
+			await Connection.StartAsync();
 			Console.WriteLine($"与服务器{_uri}连接成功");
 		}
 		catch (HttpRequestException httpRequestException)

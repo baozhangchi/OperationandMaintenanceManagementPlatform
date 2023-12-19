@@ -14,181 +14,195 @@
 <PageTitle>OAMMP.Server</PageTitle>
 
 <Layout ShowCollapseBar="true" SideWidth="0" IsPage="true" IsCollapsed="@IsCollapsed" IsFullSide="true" IsFixedHeader="true" Menus="@MenuItems" IsFixedFooter="true" ShowFooter="true">
-	<Header>
-		<BootstrapInputGroup>
-			<BootstrapInputGroupLabel DisplayText="选择服务器："></BootstrapInputGroupLabel>
-			<Select Items="@_monitors" TValue="string" @bind-Value="@CurrentUrl"></Select>
-		</BootstrapInputGroup>
-	</Header>
-	<Side>
-	</Side>
-	<Main>
-		@if (ServiceUtils==null)
-		{
-			<div>请先选择一个服务器</div>
-		}
-		else
-		{
-			@Body
-		}
-	</Main>
-	<Footer>
-		<div>Footer</div>
-	</Footer>
+    <Header>
+        <BootstrapInputGroup>
+            <BootstrapInputGroupLabel DisplayText="选择服务器："></BootstrapInputGroupLabel>
+            <Select Items="@_monitors" TValue="string" @bind-Value="@CurrentUrl"></Select>
+        </BootstrapInputGroup>
+    </Header>
+    <Side>
+    </Side>
+    <Main>
+        @if (ServiceUtils == null)
+        {
+            <div>请先选择一个服务器</div>
+        }
+        else
+        {
+            @Body
+        }
+    </Main>
+    <Footer>
+        <div>Footer</div>
+    </Footer>
 </Layout>
 
 @code {
-	List<SelectedItem> _monitors = new();
-	private string? _currentUrl;
-	private IEnumerable<MenuItem>? _menuItems;
-	private ServiceUtils? _serviceUtils;
+    List<SelectedItem> _monitors = new();
+    private string? _currentUrl;
+    private IEnumerable<MenuItem>? _menuItems;
+    private ServiceUtils? _serviceUtils;
 
-	private IEnumerable<MenuItem>? MenuItems
-	{
-		get => _menuItems;
-		set => SetField(ref _menuItems, value);
-	}
+    private IEnumerable<MenuItem>? MenuItems
+    {
+        get => _menuItems;
+        set => SetField(ref _menuItems, value);
+    }
 
-	public ServiceUtils? ServiceUtils
-	{
-		get => _serviceUtils;
-		set => SetField(ref _serviceUtils, value);
-	}
+    public ServiceUtils? ServiceUtils
+    {
+        get => _serviceUtils;
+        set => SetField(ref _serviceUtils, value);
+    }
 
-	private string? CurrentUrl
-	{
-		get => _currentUrl;
-		set
-		{
-			if (SetField(ref _currentUrl, value))
-			{
-				if (value != null)
-				{
-					ServiceUtils.Instance.Init(value);
-					ServiceUtils = ServiceUtils.Instance;
-				}
-				else
-				{
-					ServiceUtils = null;
-				}
-			}
-		}
-	}
+    private string? CurrentUrl
+    {
+        get => _currentUrl;
+        set
+        {
+            if (SetField(ref _currentUrl, value))
+            {
+                if (value != null)
+                {
+                    ServiceUtils.Instance.Init(value);
+                    ServiceUtils = ServiceUtils.Instance;
+                }
+                else
+                {
+                    ServiceUtils = null;
+                }
+            }
+        }
+    }
 
-	private bool IsCollapsed { get; }
+    private bool IsCollapsed { get; }
 
-	protected override Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			Client.ClientHandler.SetOnMonitorServersUpdated(ClientsUpdated);
-			Client.Connect(Navigation.ToAbsoluteUri("/Client"));
-		}
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Client.ClientHandler.SetOnMonitorServersUpdated(ClientsUpdated);
+            Client.ClientHandler.SetOnApplicationsUpdated(OnApplicationsUpdated);
+            Client.Connect(Navigation.ToAbsoluteUri("/Client"));
+        }
 
-		return base.OnAfterRenderAsync(firstRender);
-	}
+        return base.OnAfterRenderAsync(firstRender);
+    }
 
-	private async void OnApplicationsUpdated(string? connectionId, List<ApplicationItem>? applicationItems)
-	{
-		var items = new List<MenuItem>
-		{
-			new()
-			{
-				Text = "首页",
-				Url = "/",
-				Icon = "fa-solid fa-home"
-			},
-			new()
-			{
-				Text = "CPU",
-				Url = "/cpu",
-				Icon = "fa-solid fa-microchip"
-			},
-			new()
-			{
-				Text = "内存",
-				Url = "/memory",
-				Icon = "fa-solid fa-memory"
-			},
-			new()
-			{
-				Text = "网络",
-				Url = "/network",
-				Icon = "fa-solid fa-network-wired"
-			},
-			new()
-			{
-				Text = "磁盘",
-				Url = "/drivers",
-				Icon = "fa-solid fa-hard-drive"
-			},
-			new()
-			{
-				Text = "应用管理",
-				Url = "/apps",
-				Icon = "fa-solid fa-grip"
-			}
-		};
+    private async void OnApplicationsUpdated(string? monitorUrl, List<ApplicationItem>? applicationItems)
+    {
+        var items = new List<MenuItem>
+        {
+            new()
+            {
+                Text = "首页",
+                Url = "/",
+                Icon = "fa-solid fa-home"
+            },
+            new()
+            {
+                Text = "CPU",
+                Url = "/cpu",
+                Icon = "fa-solid fa-microchip"
+            },
+            new()
+            {
+                Text = "内存",
+                Url = "/memory",
+                Icon = "fa-solid fa-memory"
+            },
+            new()
+            {
+                Text = "网络",
+                Url = "/network",
+                Icon = "fa-solid fa-network-wired"
+            },
+            new()
+            {
+                Text = "磁盘",
+                Url = "/drivers",
+                Icon = "fa-solid fa-hard-drive"
+            },
+            new()
+            {
+                Text = "应用管理",
+                Url = "/apps",
+                Icon = "fa-solid fa-grip"
+            }
+        };
 
-		if (string.IsNullOrWhiteSpace(connectionId) || connectionId != CurrentUrl || applicationItems == null || !applicationItems.Any())
-		{
-			MenuItems = items;
-		}
-		else
-		{
-			MenuItems = items.Union(applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}"))).ToList();
-		}
-	}
+        if (string.IsNullOrWhiteSpace(CurrentUrl))
+        {
+            MenuItems = items;
+        }
+
+        if (!string.Equals(CurrentUrl, monitorUrl))
+        {
+            return;
+        }
+
+        if (applicationItems is { Count: > 0 })
+        {
+            items.Add(new MenuItem()
+            {
+                Items = applicationItems.Select(x => new MenuItem(x.Name!, $"/app/{x.UUID}")).ToList(),
+                Text = "服务器应用",
+                Icon = "fa-solid fa-bars-staggered"
+            });
+        }
+
+        MenuItems = items;
+    }
 
 
-	public async ValueTask DisposeAsync()
-	{
-		await Task.CompletedTask;
-	}
+    public async ValueTask DisposeAsync()
+    {
+        await Task.CompletedTask;
+    }
 
-	public async void ClientsUpdated(List<MonitorServer> monitorServers)
-	{
-		var currentClientIp = string.Empty;
-		if (!string.IsNullOrWhiteSpace(CurrentUrl))
-		{
-			currentClientIp = _monitors.Single(x => x.Value == CurrentUrl).Text;
-		}
+    public async void ClientsUpdated(List<MonitorServer> monitorServers)
+    {
+        var currentClientIp = string.Empty;
+        if (!string.IsNullOrWhiteSpace(CurrentUrl))
+        {
+            currentClientIp = _monitors.Single(x => x.Value == CurrentUrl).Text;
+        }
 
-		_monitors = monitorServers.Select(x => new SelectedItem(x.Url!, x.Ip!)).ToList();
-		if (!string.IsNullOrWhiteSpace(currentClientIp) && _monitors.Any(x => x.Text == currentClientIp))
-		{
-			CurrentUrl = _monitors.Single(x => x.Text == currentClientIp).Value;
-		}
-		else
-		{
-			CurrentUrl = _monitors.FirstOrDefault()?.Value;
-		}
+        _monitors = monitorServers.Select(x => new SelectedItem(x.Url!, x.Ip!)).ToList();
+        if (!string.IsNullOrWhiteSpace(currentClientIp) && _monitors.Any(x => x.Text == currentClientIp))
+        {
+            CurrentUrl = _monitors.Single(x => x.Text == currentClientIp).Value;
+        }
+        else
+        {
+            CurrentUrl = _monitors.FirstOrDefault()?.Value;
+        }
 
-		if (!string.IsNullOrEmpty(CurrentUrl))
-		{
-			var applicationItems = await ServiceUtils.Instance.GetApplications();
-			OnApplicationsUpdated(CurrentUrl!, applicationItems);
-		}
-		else
-		{
-			OnApplicationsUpdated(string.Empty, default);
-		}
-	}
+        if (!string.IsNullOrEmpty(CurrentUrl))
+        {
+            var applicationItems = await ServiceUtils.Instance.GetApplications();
+            OnApplicationsUpdated(CurrentUrl!, applicationItems);
+        }
+        else
+        {
+            OnApplicationsUpdated(string.Empty, default);
+        }
+    }
 
-	public event PropertyChangedEventHandler? PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-	protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-	{
-		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-	}
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
-	protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-	{
-		if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-		field = value;
-		OnPropertyChanged(propertyName);
-		InvokeAsync(StateHasChanged);
-		return true;
-	}
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        InvokeAsync(StateHasChanged);
+        return true;
+    }
 
 }

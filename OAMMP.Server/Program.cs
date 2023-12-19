@@ -1,12 +1,19 @@
+using NLog.Extensions.Logging;
 using OAMMP.Client.Common;
 using OAMMP.Common;
-using OAMMP.Server.Data;
 using OAMMP.Server.Hubs;
 using IClientHandler = OAMMP.Client.Common.IClientHandler;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureLogging((context, loggingBuilder) =>
+{
+	loggingBuilder.ClearProviders();
+	loggingBuilder.AddNLog();
+});
+
 // Add services to the container.
+builder.Services.AddHttpClient();
 builder.Services.AddRazorPages();
 builder.Services.AddBootstrapBlazor(options => { });
 builder.Services.AddServerSideBlazor(options =>
@@ -16,11 +23,9 @@ builder.Services.AddSignalR(options => { options.MaximumReceiveMessageSize = 102
 builder.Services.AddSingleton<IClientState, ClientState>();
 builder.Services.AddSingleton<IMonitorState, MonitorState>();
 builder.Services.AddSingleton<IClientHandler, ClientHandler>();
-builder.Services.AddScoped(typeof(SignalRClient<>));
+builder.Services.AddSingleton(typeof(SignalRClient<>));
 
 // Add Telerik Blazor server side services
-
-builder.Services.AddSingleton<WeatherForecastService>();
 
 var app = builder.Build();
 

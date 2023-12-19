@@ -30,12 +30,14 @@
 		await InvokeAsync(StateHasChanged);
 	}
 
-	public override async Task RefreshData()
+	public override Task RefreshData()
 	{
 		if (_chart != null)
 		{
-			await _chart.Update(ChartAction.AddData);
+			return _chart.Update(ChartAction.AddData);
 		}
+
+		return Task.CompletedTask;
 	}
 
 	private async Task<ChartDataSource> InitAsync()

@@ -98,6 +98,6 @@ public class ResourcesController : ControllerBase
     [HttpGet("partitions")]
     public Task<List<string>> GetPartitions()
     {
-        return Task.FromResult(DriveInfo.GetDrives().Select(drive => drive.Name).ToList());
+        return Task.FromResult(DiskInfo.GetRealDisk().Select(drive => drive.Name).ToList());
     }
 }

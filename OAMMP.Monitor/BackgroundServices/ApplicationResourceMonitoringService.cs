@@ -8,7 +8,7 @@ using OAMMP.Models;
 
 namespace OAMMP.Monitor.BackgroundServices;
 
-public class ApplicationResourceMonitoringService : TimeBackgroundService
+public class ApplicationResourceMonitoringService : TimeBackgroundService<ApplicationResourceMonitoringService>
 {
     private static readonly Dictionary<long, int> ApplicationSessionIdCollection = new();
 
@@ -24,7 +24,8 @@ public class ApplicationResourceMonitoringService : TimeBackgroundService
 
     private readonly IServiceProvider _serviceProvider;
 
-    public ApplicationResourceMonitoringService(IServiceProvider serviceProvider)
+    public ApplicationResourceMonitoringService(IServiceProvider serviceProvider,
+        ILogger<ApplicationResourceMonitoringService> logger) : base(logger)
     {
         _serviceProvider = serviceProvider;
     }
